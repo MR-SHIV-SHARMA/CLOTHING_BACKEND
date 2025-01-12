@@ -6,6 +6,10 @@ import {
   registerSuperAdmin,
   superAdminDeleteAdmin,
   createMerchant,
+  deleteMerchantById,
+  updateOrCreateMerchantById,
+  getMerchantAccountById,
+  getAllMerchantAccounts,
 } from "../controllers/superAdmin.controllers.js";
 import { checkRole } from "../middleware/roleMiddleware.js";
 import { adminRateLimiter } from "../middleware/rateLimiter.js";
@@ -57,5 +61,37 @@ router.delete(
 );
 
 router.post("/super-admin/create-merchant", adminRateLimiter, createMerchant);
+
+router.delete(
+  "/super-admin/delete-merchant/:id",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["merchant"]),
+  deleteMerchantById
+);
+
+router.patch(
+  "/super-admin/update-merchant/:id",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["merchant"]),
+  updateOrCreateMerchantById
+);
+
+router.get(
+  "/super-admin/get-merchant/:id",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["super-admin", "merchant"]),
+  getMerchantAccountById
+);
+
+router.get(
+  "/super-admin/getAll-merchant",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["super-admin", "admin"]),
+  getAllMerchantAccounts
+);
 
 export default router;

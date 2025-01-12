@@ -1,4 +1,5 @@
 import { Admin } from "../models/admin.models.js";
+import { Merchant } from "../models/merchant.models.js";
 import { ActivityLog } from "../models/activityLog.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
@@ -210,6 +211,169 @@ const createMerchant = asyncHandler(async (req, res) => {
     );
 });
 
+// Delete merchant by ID
+const deleteMerchantById = asyncHandler(async (req, res) => {
+  const merchant = await Admin.findByIdAndDelete(req.params.id);
+  if (!merchant) {
+    throw new apiError(404, "Merchant not found");
+  }
+
+  // Log activity
+  await ActivityLog.create({
+    action: "Merchant Deleted",
+    adminId: merchant._id,
+  });
+
+  // Send email notification to the deleted merchant
+  await sendEmail({
+    email: merchant.email,
+    subject: "Your Merchant Account Deleted",
+    message: `Your merchant account has been deleted successfully. \n\nEmail: ${merchant.email}`,
+  });
+
+  return res.status(200).json(
+    new apiResponse(200, {
+      message: "Merchant deleted successfully!",
+      deletedMerchant: {
+        id: merchant._id,
+        email: merchant.email,
+      },
+    })
+  );
+});
+
+// Update merchant by ID
+const updateOrCreateMerchantById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  // Extract required fields
+  const { ownerName, aadhaarCard, panCard } = req.body;
+
+  // Check required fields for creation
+  if (!ownerName || !aadhaarCard || !panCard) {
+    return res.status(400).json({
+      message: "Missing required fields: ownerName, aadhaarCard, or panCard",
+    });
+  }
+
+  // Check if a merchant exists
+  let merchant = await Merchant.findById(id);
+
+  if (!merchant) {
+    // Create new merchant if not found
+    try {
+      merchant = new Merchant({ _id: id, ...req.body });
+      await merchant.save();
+
+      // Log activity
+      await ActivityLog.create({
+        action: "New Merchant created",
+        adminId: merchant._id,
+        details: `Created Merchant ID: ${id}`,
+      });
+
+      return res.status(201).json({
+        message: "New Merchant created successfully!",
+        merchant,
+      });
+    } catch (error) {
+      if (error.name === "ValidationError") {
+        const messages = Object.values(error.errors).map((err) => err.message);
+        return res.status(400).json({
+          message: "Validation Error",
+          errors: messages,
+        });
+      }
+      throw error;
+    }
+  }
+
+  // Update the existing merchant
+  const updatedMerchant = await Merchant.findByIdAndUpdate(
+    id,
+    { $set: req.body },
+    { new: true, runValidators: true }
+  );
+
+  // Log activity for update
+  await ActivityLog.create({
+    action: "Merchant details updated successfully",
+    adminId: merchant._id,
+    details: `Updated Merchant ID: ${id}`,
+  });
+
+  return res.status(200).json({
+    message: "Merchant updated successfully!",
+    updatedMerchant,
+  });
+});
+
+// get merchant by ID
+const getMerchantAccountById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find merchant by ID
+    const merchant = await Merchant.findById(id);
+
+    if (!merchant) {
+      return res.status(404).json({
+        message: "Merchant not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Merchant details retrieved successfully!",
+      merchant,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred",
+      error: error.message,
+    });
+  }
+});
+
+// get All merchant accounts
+const getAllMerchantAccounts = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, sort = "createdAt" } = req.query; // Default values for pagination and sorting
+
+  try {
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * limit;
+
+    // Fetch merchants with pagination and sorting
+    const merchants = await Merchant.find()
+      .sort({ [sort]: 1 }) // Sort by the specified field (ascending by default)
+      .skip(skip)
+      .limit(Number(limit));
+
+    if (!merchants || merchants.length === 0) {
+      return res.status(404).json({
+        message: "No merchants found",
+      });
+    }
+
+    // Get the total count of merchants for pagination info
+    const totalMerchants = await Merchant.countDocuments();
+
+    return res.status(200).json({
+      message: "Merchants retrieved successfully!",
+      merchants,
+      pagination: {
+        totalMerchants,
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalMerchants / limit),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred",
+      error: error.message,
+    });
+  }
+});
+
 // Super Admin deletes another Super Admin
 const deleteSuperAdmin = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -295,4 +459,8 @@ export {
   deleteSuperAdmin,
   superAdminDeleteAdmin,
   createMerchant,
+  deleteMerchantById,
+  updateOrCreateMerchantById,
+  getMerchantAccountById,
+  getAllMerchantAccounts,
 };
