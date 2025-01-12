@@ -43,17 +43,8 @@ const productSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
-    sku: { type: String, unique: true, required: true },
-    tags: [{ type: String }],
     isAvailable: { type: Boolean, default: true },
-    weight: { type: Number },
-    dimensions: {
-      length: { type: Number },
-      width: { type: Number },
-      height: { type: Number },
-    },
     material: { type: String },
-    careInstructions: { type: String },
     manufacturer: {
       name: { type: String },
       address: { type: String },

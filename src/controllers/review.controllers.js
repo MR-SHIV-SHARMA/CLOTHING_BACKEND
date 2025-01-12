@@ -29,8 +29,11 @@ const createReview = asyncHandler(async (req, res) => {
 const getReviewsByProductId = asyncHandler(async (req, res) => {
   const { productId } = req.params;
 
-  const reviews = await Review.find({ product: productId }).populate("user", "name");
-  
+  const reviews = await Review.find({ product: productId }).populate(
+    "user",
+    "name"
+  );
+
   return res
     .status(200)
     .json(new apiResponse(200, reviews, "Reviews fetched successfully."));
@@ -55,8 +58,10 @@ const updateReviewById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const reviewData = req.body;
 
-  const updatedReview = await Review.findByIdAndUpdate(id, reviewData, { new: true });
-  
+  const updatedReview = await Review.findByIdAndUpdate(id, reviewData, {
+    new: true,
+  });
+
   if (!updatedReview) {
     throw new apiError(404, "Review not found.");
   }

@@ -5,7 +5,7 @@ import {
   getCouponById,
   updateCouponById,
   deleteCouponById,
-} from "../controllers/coupon.controller.js";
+} from "../controllers/coupon.controllers.js";
 
 const router = express.Router();
 

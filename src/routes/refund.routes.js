@@ -5,7 +5,7 @@ import {
   getRefundById,
   updateRefundById,
   deleteRefundById,
-} from "../controllers/refund.controller.js";
+} from "../controllers/refund.controllers.js";
 
 const router = express.Router();
 

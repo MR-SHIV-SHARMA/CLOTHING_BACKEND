@@ -14,13 +14,17 @@ const createBrand = asyncHandler(async (req, res) => {
 
   // Create the brand
   const brand = await Brand.create({ name, logo, isActive });
-  return res.status(201).json(new apiResponse(201, brand, "Brand created successfully"));
+  return res
+    .status(201)
+    .json(new apiResponse(201, brand, "Brand created successfully"));
 });
 
 // Get all brands
 const getAllBrands = asyncHandler(async (req, res) => {
   const brands = await Brand.find();
-  return res.status(200).json(new apiResponse(200, brands, "Brands fetched successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, brands, "Brands fetched successfully"));
 });
 
 // Get a brand by ID
@@ -30,7 +34,9 @@ const getBrandById = asyncHandler(async (req, res) => {
   if (!brand) {
     throw new apiError(404, "Brand not found");
   }
-  return res.status(200).json(new apiResponse(200, brand, "Brand fetched successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, brand, "Brand fetched successfully"));
 });
 
 // Update a brand by ID
@@ -43,11 +49,15 @@ const updateBrandById = asyncHandler(async (req, res) => {
     throw new apiError(400, "Brand name is required.");
   }
 
-  const updatedBrand = await Brand.findByIdAndUpdate(id, brandData, { new: true });
+  const updatedBrand = await Brand.findByIdAndUpdate(id, brandData, {
+    new: true,
+  });
   if (!updatedBrand) {
     throw new apiError(404, "Brand not found");
   }
-  return res.status(200).json(new apiResponse(200, updatedBrand, "Brand updated successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, updatedBrand, "Brand updated successfully"));
 });
 
 // Delete a brand by ID
@@ -57,7 +67,9 @@ const deleteBrandById = asyncHandler(async (req, res) => {
   if (!deletedBrand) {
     throw new apiError(404, "Brand not found");
   }
-  return res.status(200).json(new apiResponse(200, {}, "Brand deleted successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, {}, "Brand deleted successfully"));
 });
 
 export {

@@ -4,11 +4,6 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     fullname: {
       type: String,
       required: true,
@@ -25,7 +20,7 @@ const userSchema = new mongoose.Schema(
       required: [true, "Please enter your password"],
     },
     phoneNumber: {
-      type: String, // Phone number ko string rakhna behtar hota hai
+      type: String,
       required: true,
     },
     role: {
@@ -36,6 +31,9 @@ const userSchema = new mongoose.Schema(
     },
     isActive: { type: Boolean, default: true },
     refreshToken: {
+      type: String,
+    },
+    avatar: {
       type: String,
     },
   },

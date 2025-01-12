@@ -21,17 +21,17 @@ const generateAccessTokensAndRefreshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, fullname, email, password, phoneNumber } = req.body;
+  const { fullname, email, password, phoneNumber } = req.body;
 
   if (
-    [username, fullname, email, password, phoneNumber].some(
+    [fullname, email, password, phoneNumber].some(
       (field) => field?.trim() === ""
     )
   ) {
     throw new apiError(422, "Please fill in all the required fields");
   }
 
-  const existedUser = await User.findOne({ $or: [{ username }, { email }] });
+  const existedUser = await User.findOne({ email });
   if (existedUser) {
     throw new apiError(
       422,
@@ -39,35 +39,9 @@ const registerUser = asyncHandler(async (req, res) => {
     );
   }
 
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  let coverImageLocalPath;
-  if (
-    req.files &&
-    Array.isArray(req.files.coverImage) &&
-    req.files.coverImage.length > 0
-  ) {
-    coverImageLocalPath = req.files.coverImage[0]?.path;
-  }
-
-  if (!avatarLocalPath) {
-    throw new apiError(400, "Please select a valid image file for your avatar");
-  }
-
-  const avatar = await uploadFileToCloudinary(avatarLocalPath);
-  const coverImage = coverImageLocalPath
-    ? await uploadFileToCloudinary(coverImageLocalPath)
-    : null;
-
-  if (!avatar) {
-    throw new apiError(400, "Failed to upload avatar file. Please try again");
-  }
-
   const user = await User.create({
     fullname,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
     email,
-    username: username.toLowerCase(),
     password,
     phoneNumber,
   });
@@ -85,13 +59,13 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { username, password, email } = req.body;
+  const { password, email } = req.body;
 
-  if (!(username || email)) {
-    throw new apiError(422, "Username or email is required");
+  if (!email) {
+    throw new apiError(422, "email is required");
   }
 
-  const user = await User.findOne({ $or: [{ username }, { email }] });
+  const user = await User.findOne({ email });
   if (!user) {
     throw new apiError(401, "Invalid credentials. Please try again");
   }
@@ -225,6 +199,14 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
   if (!(fullname && email && phoneNumber)) {
     throw new apiError(400, "All fields are required");
+  }
+
+  const detailsExist = await User.findOne({ email, phoneNumber });
+  if (detailsExist) {
+    throw new apiError(
+      422,
+      "Email or phone number already in use, please try a different one"
+    );
   }
 
   const user = await User.findByIdAndUpdate(

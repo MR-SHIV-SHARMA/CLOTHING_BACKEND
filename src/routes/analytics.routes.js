@@ -5,7 +5,7 @@ import {
   getAnalyticsById,
   deleteAnalyticsById,
   updateAnalyticsById,
-} from "../controllers/analytics.controller.js";
+} from "../controllers/analytics.controllers.js";
 
 const router = express.Router();
 

@@ -1,31 +1,15 @@
-import express from "express";
+import { Router } from "express";
 import {
-  createProduct,
   getAllProducts,
   getProductById,
-  updateProductById,
-  deleteProductById,
-  getNonDeletedProducts,
-} from "../controllers/product.controller.js";
+} from "../controllers/product.controllers.js";
 
-const router = express.Router();
-
-// Create a new product
-router.post("/", createProduct);
+const router = Router();
 
 // Get all products with optional filters
-router.get("/", getAllProducts);
+router.route("/").get(getAllProducts);
 
 // Get a specific product by ID
-router.get("/:id", getProductById);
-
-// Update a product by ID
-router.put("/:id", updateProductById);
-
-// Soft delete a product by ID
-router.delete("/:id", deleteProductById);
-
-// Get all non-deleted products (optional)
-router.get("/non-deleted", getNonDeletedProducts);
+router.route("/:id").get(getProductById);
 
 export default router;

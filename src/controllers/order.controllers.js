@@ -9,7 +9,10 @@ const createOrder = asyncHandler(async (req, res) => {
 
   // Validate required fields
   if (!user || !items || !totalAmount || !shippingAddress) {
-    throw new apiError(400, "User, items, total amount, and shipping address are required.");
+    throw new apiError(
+      400,
+      "User, items, total amount, and shipping address are required."
+    );
   }
 
   // Create the order
@@ -27,7 +30,9 @@ const createOrder = asyncHandler(async (req, res) => {
 
 // Get all orders
 const getAllOrders = asyncHandler(async (req, res) => {
-  const orders = await Order.find().populate("user items.product shippingAddress");
+  const orders = await Order.find().populate(
+    "user items.product shippingAddress"
+  );
 
   return res
     .status(200)
@@ -38,7 +43,9 @@ const getAllOrders = asyncHandler(async (req, res) => {
 const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const order = await Order.findById(id).populate("user items.product shippingAddress");
+  const order = await Order.findById(id).populate(
+    "user items.product shippingAddress"
+  );
   if (!order) {
     throw new apiError(404, "Order not found.");
   }
@@ -53,8 +60,10 @@ const updateOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const orderData = req.body;
 
-  const updatedOrder = await Order.findByIdAndUpdate(id, orderData, { new: true });
-  
+  const updatedOrder = await Order.findByIdAndUpdate(id, orderData, {
+    new: true,
+  });
+
   if (!updatedOrder) {
     throw new apiError(404, "Order not found.");
   }

@@ -1,4 +1,4 @@
-import { Shipping } from "../models/shipping.models.js";
+import { Shipping } from "../Models/shipping.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";

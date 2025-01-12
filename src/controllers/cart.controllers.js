@@ -19,11 +19,15 @@ const createOrUpdateCart = asyncHandler(async (req, res) => {
     // Update existing cart
     cart.items = items;
     await cart.save();
-    return res.status(200).json(new apiResponse(200, cart, "Cart updated successfully"));
+    return res
+      .status(200)
+      .json(new apiResponse(200, cart, "Cart updated successfully"));
   } else {
     // Create a new cart
     cart = await Cart.create({ user, items });
-    return res.status(201).json(new apiResponse(201, cart, "Cart created successfully"));
+    return res
+      .status(201)
+      .json(new apiResponse(201, cart, "Cart created successfully"));
   }
 });
 
@@ -34,7 +38,9 @@ const getCartByUserId = asyncHandler(async (req, res) => {
   if (!cart) {
     throw new apiError(404, "Cart not found");
   }
-  return res.status(200).json(new apiResponse(200, cart, "Cart fetched successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, cart, "Cart fetched successfully"));
 });
 
 // Add item to cart
@@ -50,12 +56,19 @@ const addItemToCart = asyncHandler(async (req, res) => {
 
   if (!cart) {
     // Create a new cart if it doesn't exist
-    cart = await Cart.create({ user: userId, items: [{ product: productId, quantity }] });
-    return res.status(201).json(new apiResponse(201, cart, "Item added to cart successfully"));
+    cart = await Cart.create({
+      user: userId,
+      items: [{ product: productId, quantity }],
+    });
+    return res
+      .status(201)
+      .json(new apiResponse(201, cart, "Item added to cart successfully"));
   }
 
   // Check if the item already exists in the cart
-  const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+  const itemIndex = cart.items.findIndex(
+    (item) => item.product.toString() === productId
+  );
 
   if (itemIndex > -1) {
     // Update existing item quantity
@@ -66,7 +79,9 @@ const addItemToCart = asyncHandler(async (req, res) => {
   }
 
   await cart.save();
-  return res.status(200).json(new apiResponse(200, cart, "Item added to cart successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, cart, "Item added to cart successfully"));
 });
 
 // Remove item from cart
@@ -84,10 +99,14 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
   }
 
   // Filter out the item to be removed
-  cart.items = cart.items.filter(item => item.product.toString() !== productId);
+  cart.items = cart.items.filter(
+    (item) => item.product.toString() !== productId
+  );
   await cart.save();
 
-  return res.status(200).json(new apiResponse(200, cart, "Item removed from cart successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, cart, "Item removed from cart successfully"));
 });
 
 // Clear cart for a user
@@ -104,7 +123,9 @@ const clearCart = asyncHandler(async (req, res) => {
     throw new apiError(404, "Cart not found");
   }
 
-  return res.status(200).json(new apiResponse(200, {}, "Cart cleared successfully"));
+  return res
+    .status(200)
+    .json(new apiResponse(200, {}, "Cart cleared successfully"));
 });
 
 export {

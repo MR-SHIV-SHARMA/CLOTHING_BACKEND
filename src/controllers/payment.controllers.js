@@ -53,15 +53,19 @@ const updatePaymentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const paymentData = req.body;
 
-  const updatedPayment = await Payment.findByIdAndUpdate(id, paymentData, { new: true });
-  
+  const updatedPayment = await Payment.findByIdAndUpdate(id, paymentData, {
+    new: true,
+  });
+
   if (!updatedPayment) {
     throw new apiError(404, "Payment not found.");
   }
 
   return res
     .status(200)
-    .json(new apiResponse(200, updatedPayment, "Payment updated successfully."));
+    .json(
+      new apiResponse(200, updatedPayment, "Payment updated successfully.")
+    );
 });
 
 // Delete a payment by ID

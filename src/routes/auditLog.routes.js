@@ -5,7 +5,7 @@ import {
   getAuditLogById,
   deleteAuditLogById,
   updateAuditLogById,
-} from "../controllers/auditLog.controller.js";
+} from "../controllers/auditLog.controllers.js";
 
 const router = express.Router();
 

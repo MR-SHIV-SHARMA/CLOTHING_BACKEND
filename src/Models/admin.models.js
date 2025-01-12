@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const adminSchema = new mongoose.Schema(
   {
-    name: {
+    fullname: {
       type: String,
       required: true,
     },
@@ -21,10 +21,6 @@ const adminSchema = new mongoose.Schema(
       type: String,
       enum: ["admin", "user"], // Aap yahan aur roles add kar sakte hain
       default: "user",
-    },
-    permissions: {
-      type: [String], // Yahan aap permissions define kar sakte hain
-      default: [],
     },
   },
   { timestamps: true } // timeseries ka use nahi hua yahan, isko timestamps ke liye use karein
