@@ -1,13 +1,9 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 const adminSchema = new mongoose.Schema(
   {
-    fullname: {
-      type: String,
-      required: true,
-    },
     email: {
       type: String,
       required: true,
@@ -19,11 +15,16 @@ const adminSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "user"], // Aap yahan aur roles add kar sakte hain
-      default: "user",
+      enum: ["admin", "super-admin"],
+      default: "admin",
     },
+    isDefaultSuperAdmin: { type: Boolean, default: false }, // Ensure this field is defined
+    resetPasswordToken: String,
+    resetPasswordExpiry: Date,
   },
-  { timestamps: true } // timeseries ka use nahi hua yahan, isko timestamps ke liye use karein
+  {
+    timestamps: true,
+  }
 );
 
 adminSchema.pre("save", async function (next) {
@@ -41,7 +42,6 @@ adminSchema.methods.generateAccessToken = function () {
     {
       _id: this._id,
       email: this.email,
-      role: this.role,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {

@@ -19,10 +19,16 @@ app.use(express.static("public"));
 
 app.use(cookieParser());
 
+// admin block
+import authRoutes from "./admin/routes/auth.routes.js";
+import adminRoutes from "./admin/routes/admin.routes.js";
+import contentRoutes from "./admin/routes/content.routes.js";
+import activityRoutes from "./admin/routes/activity.routes.js";
+import superAdminRoutes from "./admin/routes/superAdmin.routes.js";
+
 import userRouter from "./routes/user.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
-import adminRoutes from "./routes/admin.routes.js";
 import brandRoutes from "./routes/brand.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import refundRoutes from "./routes/refund.routes.js";
@@ -38,6 +44,13 @@ import categoryRoutes from "./routes/category.routes.js";
 import inventoryRoutes from "./routes/inventory.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+
+// admin block
+app.use("/auth", authRoutes);
+app.use("/admin", adminRoutes);
+app.use("/content", contentRoutes);
+app.use("/activity", activityRoutes);
+app.use("/super-admin", superAdminRoutes);
 
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/users", userRouter);
