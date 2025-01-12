@@ -52,15 +52,21 @@ const login = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  // Ensure that req.admin has isDefaultSuperAdmin
-  req.admin = { ...loggedInAdmin._doc, isDefaultSuperAdmin }; // This ensures that isDefaultSuperAdmin is included
+  // Ensure that req.admin has isDefaultSuperAdmin and role
+  req.admin = { ...loggedInAdmin._doc, isDefaultSuperAdmin, role: admin.role }; // Include role
 
   const options = {
     httpOnly: true,
     secure: true,
   };
 
-  const role = admin.role === "super-admin" ? "Super Admin" : "Admin";
+  // Update role message to include "Merchant"
+  const role =
+    admin.role === "super-admin"
+      ? "Super Admin"
+      : admin.role === "merchant"
+        ? "Merchant"
+        : "Admin";
 
   await ActivityLog.create({
     adminId: admin._id,
@@ -101,7 +107,13 @@ const logout = asyncHandler(async (req, res) => {
     secure: true,
   };
 
-  const role = req.admin.role === "super-admin" ? "Super Admin" : "Admin";
+  // Update role message to include "Merchant"
+  const role =
+    req.admin.role === "super-admin"
+      ? "Super Admin"
+      : req.admin.role === "merchant"
+        ? "Merchant"
+        : "Admin";
 
   await ActivityLog.create({
     adminId: req.admin._id,

@@ -5,6 +5,7 @@ import {
   deleteSuperAdmin,
   registerSuperAdmin,
   superAdminDeleteAdmin,
+  createMerchant,
 } from "../controllers/superAdmin.controllers.js";
 import { checkRole } from "../middleware/roleMiddleware.js";
 import { adminRateLimiter } from "../middleware/rateLimiter.js";
@@ -54,5 +55,7 @@ router.delete(
   checkRole(["super-admin"]),
   superAdminDeleteAdmin
 );
+
+router.post("/super-admin/create-merchant", adminRateLimiter, createMerchant);
 
 export default router;

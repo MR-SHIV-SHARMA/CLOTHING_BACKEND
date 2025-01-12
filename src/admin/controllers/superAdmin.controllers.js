@@ -151,6 +151,65 @@ const registerSuperAdmin = asyncHandler(async (req, res) => {
     );
 });
 
+// Create a new merchant
+const createMerchant = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new apiError(422, "Email and password are required!");
+  }
+
+  const existingMerchant = await Admin.findOne({
+    email,
+    role: "merchant",
+  });
+
+  if (existingMerchant) {
+    throw new apiError(422, "A merchant already exists with this email!");
+  }
+
+  const newMerchant = new Admin({
+    email,
+    password,
+    role: "merchant",
+  });
+
+  await newMerchant.save();
+
+  const createdMerchant = await Admin.findById(newMerchant._id).select(
+    "-password -refreshToken"
+  );
+
+  if (!createdMerchant) {
+    throw new apiError(500, "Failed to create admin. Please try again later.");
+  }
+
+  // Send email notification
+  await sendEmail({
+    email,
+    subject: "Verify Your Merchant Account",
+    message: `<p>Welcome Merchant, your merchant account has been created. Please verify your email.</p>`,
+  });
+
+  // Log the action without req.admin._id
+  await ActivityLog.create({
+    // Use a placeholder or remove this line if not needed
+    adminId: newMerchant._id, // or you can remove this line if logging is not necessary
+    action: `Created a merchant with email: ${email}`,
+  });
+
+  return res
+    .status(201)
+    .json(
+      new apiResponse(
+        201,
+        createdMerchant,
+        "Merchant created successfully",
+        true
+      )
+    );
+});
+
 // Super Admin deletes another Super Admin
 const deleteSuperAdmin = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -235,4 +294,5 @@ export {
   registerSuperAdmin,
   deleteSuperAdmin,
   superAdminDeleteAdmin,
+  createMerchant,
 };
