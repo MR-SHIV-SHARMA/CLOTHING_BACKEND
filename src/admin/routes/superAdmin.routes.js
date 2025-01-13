@@ -4,6 +4,7 @@ import {
   createDefaultSuperAdmin,
   deleteSuperAdmin,
   registerSuperAdmin,
+  superAdminCreateAdmin,
   superAdminDeleteAdmin,
   createMerchant,
   deleteMerchantById,
@@ -49,6 +50,15 @@ router.delete(
   authenticateAdmin,
   checkRole(["super-admin"]),
   deleteSuperAdmin
+);
+
+// Super admin creates a new admin
+router.post(
+  "/super-admin/create-admin",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["super-admin"]),
+  superAdminCreateAdmin
 );
 
 // Super admin deletes an admin by ID
