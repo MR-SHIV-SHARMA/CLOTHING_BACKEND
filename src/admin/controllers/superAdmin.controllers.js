@@ -472,7 +472,7 @@ const getMerchantAccountById = asyncHandler(async (req, res) => {
   }
 });
 
-// get All merchant accounts
+// Get all merchant accounts
 const getAllMerchantAccounts = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, sort = "createdAt" } = req.query; // Default values for pagination and sorting
 
@@ -481,7 +481,7 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Fetch merchants with pagination and sorting
-    const merchants = await User.find()
+    const merchants = await User.find({ role: "merchant" }) // Filter for merchants
       .sort({ [sort]: 1 }) // Sort by the specified field (ascending by default)
       .skip(skip)
       .limit(Number(limit));
@@ -493,7 +493,7 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
     }
 
     // Get the total count of merchants for pagination info
-    const totalMerchants = await User.countDocuments();
+    const totalMerchants = await User.countDocuments({ role: "merchant" }); // Count only merchants
 
     return res.status(200).json({
       message: "Merchants retrieved successfully!",
