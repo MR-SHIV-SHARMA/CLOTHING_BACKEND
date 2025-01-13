@@ -1,10 +1,10 @@
-import { Admin } from "../models/admin.models.js";
 import { Merchant } from "../models/merchant.models.js";
 import { ActivityLog } from "../models/activityLog.models.js";
 import { apiError } from "../../utils/apiError.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { sendEmail } from "../helpers/mailer.js";
+import { User } from "../../Models/user.models.js";
 
 // Function to Create Default Super Admin
 const createDefaultSuperAdmin = asyncHandler(async (req, res) => {
@@ -21,7 +21,7 @@ const createDefaultSuperAdmin = asyncHandler(async (req, res) => {
 
   try {
     // Check if a default super admin already exists
-    const existingSuperAdmin = await Admin.findOne({
+    const existingSuperAdmin = await User.findOne({
       email: defaultEmail,
       role: "super-admin",
       isDefaultSuperAdmin: true,
@@ -41,7 +41,7 @@ const createDefaultSuperAdmin = asyncHandler(async (req, res) => {
     }
 
     // Create the default super admin
-    const superAdmin = new Admin({
+    const superAdmin = new User({
       email: defaultEmail,
       password: defaultPassword,
       role: "super-admin",
@@ -101,7 +101,7 @@ const registerSuperAdmin = asyncHandler(async (req, res) => {
     );
   }
 
-  const existingSuperAdmin = await Admin.findOne({
+  const existingSuperAdmin = await User.findOne({
     email,
     role: "super-admin",
   });
@@ -110,7 +110,7 @@ const registerSuperAdmin = asyncHandler(async (req, res) => {
     throw new apiError(422, "A super admin already exists with this email!");
   }
 
-  const newSuperAdmin = new Admin({
+  const newSuperAdmin = new User({
     email,
     password,
     role: "super-admin",
@@ -118,7 +118,7 @@ const registerSuperAdmin = asyncHandler(async (req, res) => {
 
   await newSuperAdmin.save();
 
-  const createdSuperAdmin = await Admin.findById(newSuperAdmin._id).select(
+  const createdSuperAdmin = await User.findById(newSuperAdmin._id).select(
     "-password -refreshToken"
   );
 
@@ -152,6 +152,134 @@ const registerSuperAdmin = asyncHandler(async (req, res) => {
     );
 });
 
+// Super Admin deletes another Super Admin
+const deleteSuperAdmin = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!req.admin.isDefaultSuperAdmin) {
+    throw new apiError(
+      403,
+      "Only the default super admin can delete other super admins!"
+    );
+  }
+
+  if (id === req.admin._id.toString()) {
+    throw new apiError(400, "You cannot delete the default super admin!");
+  }
+
+  const superAdminToDelete = await User.findOne({
+    _id: id,
+    role: "super-admin",
+  });
+
+  if (!superAdminToDelete) {
+    throw new apiError(404, "Super admin not found!");
+  }
+
+  await User.findByIdAndDelete(id);
+
+  await ActivityLog.create({
+    adminId: req.admin._id,
+    action: `Deleted super admin with email: ${superAdminToDelete.email}`,
+  });
+
+  await sendEmail({
+    email: superAdminToDelete.email,
+    subject: "Super Admin Account Deleted",
+    message: `Your super admin account has been deleted successfully by the default super admin. \n\nEmail: ${superAdminToDelete.email}`,
+  });
+
+  return res.status(200).json({
+    message: "Super admin deleted successfully!",
+    deletedSuperAdmin: {
+      id: superAdminToDelete._id,
+      email: superAdminToDelete.email,
+    },
+  });
+});
+
+// Super Admin creates a new admin
+const superAdminCreateAdmin = asyncHandler(async (req, res) => {
+  const { email, password, role } = req.body;
+
+  if (!email || !password || !role) {
+    return res.status(400).json({ message: "All fields are required!" });
+  }
+
+  const validRoles = ["admin"];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({ message: "Invalid role provided!" });
+  }
+
+  const existingAdmin = await User.findOne({ email });
+  if (existingAdmin) {
+    return res
+      .status(400)
+      .json({ message: "Admin with this email already exists!" });
+  }
+
+  const newAdmin = new User({
+    email,
+    password,
+    role,
+  });
+
+  await newAdmin.save();
+
+  await ActivityLog.create({
+    adminId: req.admin._id,
+    action: `Created new admin ${email}`,
+  });
+
+  await sendEmail({
+    email: newAdmin.email,
+    subject: "Admin Account Created",
+    message: `Your admin account has been created by the super admin.\n\nEmail: ${newAdmin.email}\nPlease log in with your provided credentials.`,
+  });
+
+  res.status(201).json({
+    message: "Admin created successfully!",
+    admin: {
+      id: newAdmin._id,
+      email: newAdmin.email,
+      role: newAdmin.role,
+    },
+  });
+});
+
+// Super Admin deletes an admin by ID
+const superAdminDeleteAdmin = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const admin = await User.findById(id);
+  if (!admin) {
+    return res.status(404).json({ message: "Admin not found!" });
+  }
+
+  await User.findByIdAndDelete(id);
+
+  await ActivityLog.create({
+    adminId: req.admin._id,
+    action: `Deleted admin ${admin.email}`,
+  });
+
+  // Send email notification to the deleted admin
+  await sendEmail({
+    email: admin.email,
+    subject: "Admin Account Deleted",
+    message: `Your admin account has been deleted by the super admin. \n\nEmail: ${admin.email}`,
+  });
+
+  res.status(200).json({
+    message: "Admin deleted successfully!",
+    admin: {
+      id: admin._id,
+      email: admin.email,
+      role: admin.role,
+    },
+  });
+});
+
 // Create a new merchant
 const createMerchant = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -160,7 +288,7 @@ const createMerchant = asyncHandler(async (req, res) => {
     throw new apiError(422, "Email and password are required!");
   }
 
-  const existingMerchant = await Admin.findOne({
+  const existingMerchant = await User.findOne({
     email,
     role: "merchant",
   });
@@ -169,7 +297,7 @@ const createMerchant = asyncHandler(async (req, res) => {
     throw new apiError(422, "A merchant already exists with this email!");
   }
 
-  const newMerchant = new Admin({
+  const newMerchant = new User({
     email,
     password,
     role: "merchant",
@@ -177,7 +305,7 @@ const createMerchant = asyncHandler(async (req, res) => {
 
   await newMerchant.save();
 
-  const createdMerchant = await Admin.findById(newMerchant._id).select(
+  const createdMerchant = await User.findById(newMerchant._id).select(
     "-password -refreshToken"
   );
 
@@ -213,7 +341,7 @@ const createMerchant = asyncHandler(async (req, res) => {
 
 // Delete merchant by ID
 const deleteMerchantById = asyncHandler(async (req, res) => {
-  const merchant = await Admin.findByIdAndDelete(req.params.id);
+  const merchant = await User.findByIdAndDelete(req.params.id);
   if (!merchant) {
     throw new apiError(404, "Merchant not found");
   }
@@ -259,6 +387,15 @@ const updateOrCreateMerchantById = asyncHandler(async (req, res) => {
   // Check if a merchant exists
   let merchant = await Merchant.findById(id);
 
+  // Fetch the registered email if the merchant exists
+  let registeredEmail = null;
+  if (merchant) {
+    const adminRecord = await User.findOne({ _id: id, role: "merchant" });
+    if (adminRecord) {
+      registeredEmail = adminRecord.email;
+    }
+  }
+
   if (!merchant) {
     // Create new merchant if not found
     try {
@@ -299,12 +436,13 @@ const updateOrCreateMerchantById = asyncHandler(async (req, res) => {
   await ActivityLog.create({
     action: "Merchant details updated successfully",
     adminId: merchant._id,
-    details: `Updated Merchant ID: ${id}`,
+    details: `Updated Merchant ID: ${id} (Registered Email: ${registeredEmail})`,
   });
 
   return res.status(200).json({
     message: "Merchant updated successfully!",
     updatedMerchant,
+    registeredEmail, // Include the registered email in the response
   });
 });
 
@@ -314,7 +452,7 @@ const getMerchantAccountById = asyncHandler(async (req, res) => {
 
   try {
     // Find merchant by ID
-    const merchant = await Merchant.findById(id);
+    const merchant = await User.findById(id);
 
     if (!merchant) {
       return res.status(404).json({
@@ -343,7 +481,7 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Fetch merchants with pagination and sorting
-    const merchants = await Merchant.find()
+    const merchants = await User.find()
       .sort({ [sort]: 1 }) // Sort by the specified field (ascending by default)
       .skip(skip)
       .limit(Number(limit));
@@ -355,7 +493,7 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
     }
 
     // Get the total count of merchants for pagination info
-    const totalMerchants = await Merchant.countDocuments();
+    const totalMerchants = await User.countDocuments();
 
     return res.status(200).json({
       message: "Merchants retrieved successfully!",
@@ -374,89 +512,11 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
   }
 });
 
-// Super Admin deletes another Super Admin
-const deleteSuperAdmin = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  if (!req.admin.isDefaultSuperAdmin) {
-    throw new apiError(
-      403,
-      "Only the default super admin can delete other super admins!"
-    );
-  }
-
-  if (id === req.admin._id.toString()) {
-    throw new apiError(400, "You cannot delete the default super admin!");
-  }
-
-  const superAdminToDelete = await Admin.findOne({
-    _id: id,
-    role: "super-admin",
-  });
-
-  if (!superAdminToDelete) {
-    throw new apiError(404, "Super admin not found!");
-  }
-
-  await Admin.findByIdAndDelete(id);
-
-  await ActivityLog.create({
-    adminId: req.admin._id,
-    action: `Deleted super admin with email: ${superAdminToDelete.email}`,
-  });
-
-  await sendEmail({
-    email: superAdminToDelete.email,
-    subject: "Super Admin Account Deleted",
-    message: `Your super admin account has been deleted successfully by the default super admin. \n\nEmail: ${superAdminToDelete.email}`,
-  });
-
-  return res.status(200).json({
-    message: "Super admin deleted successfully!",
-    deletedSuperAdmin: {
-      id: superAdminToDelete._id,
-      email: superAdminToDelete.email,
-    },
-  });
-});
-
-// Super Admin deletes an admin by ID
-const superAdminDeleteAdmin = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const admin = await Admin.findById(id);
-  if (!admin) {
-    return res.status(404).json({ message: "Admin not found!" });
-  }
-
-  await Admin.findByIdAndDelete(id);
-
-  await ActivityLog.create({
-    adminId: req.admin._id,
-    action: `Deleted admin ${admin.email}`,
-  });
-
-  // Send email notification to the deleted admin
-  await sendEmail({
-    email: admin.email,
-    subject: "Admin Account Deleted",
-    message: `Your admin account has been deleted by the super admin. \n\nEmail: ${admin.email}`,
-  });
-
-  res.status(200).json({
-    message: "Admin deleted successfully!",
-    admin: {
-      id: admin._id,
-      email: admin.email,
-      role: admin.role,
-    },
-  });
-});
-
 export {
   createDefaultSuperAdmin,
   registerSuperAdmin,
   deleteSuperAdmin,
+  superAdminCreateAdmin,
   superAdminDeleteAdmin,
   createMerchant,
   deleteMerchantById,
