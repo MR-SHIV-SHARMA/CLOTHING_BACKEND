@@ -26,7 +26,7 @@ router.delete(
   "/product/:id",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   deleteProductById
 );
 
@@ -34,7 +34,7 @@ router.patch(
   "/update-product/:id",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   updateProductById
 );
 
@@ -42,7 +42,7 @@ router.post(
   "/createProduct",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   createProduct
 );
 
@@ -50,7 +50,7 @@ router.get(
   "/getAllProducts",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   getAllProducts
 );
 
@@ -58,7 +58,7 @@ router.get(
   "/getProductById",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   getProductById
 );
 
