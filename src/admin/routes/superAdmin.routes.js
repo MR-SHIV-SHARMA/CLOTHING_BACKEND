@@ -76,7 +76,7 @@ router.delete(
   "/super-admin/delete-merchant/:id",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["merchant"]),
+  checkRole(["super-admin", "merchant"]),
   deleteMerchantById
 );
 
