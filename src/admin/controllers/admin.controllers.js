@@ -1,7 +1,7 @@
-import { Admin } from "../models/admin.models.js";
 import { apiError } from "../../utils/apiError.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { User } from "../../Models/user.models.js";
 
 // Get all admins with pagination
 const getAllAdmins = asyncHandler(async (req, res) => {
@@ -11,12 +11,12 @@ const getAllAdmins = asyncHandler(async (req, res) => {
   // Filter for admins with role "admin"
   const query = { role: "admin" };
 
-  const admins = await Admin.find(query)
+  const admins = await User.find(query)
     .select("-password")
     .skip(skip)
     .limit(Number(limit));
 
-  const totalAdmins = await Admin.countDocuments(query);
+  const totalAdmins = await User.countDocuments(query);
 
   res.status(200).json(
     apiResponse(200, "Admins retrieved successfully", {
@@ -30,7 +30,7 @@ const getAllAdmins = asyncHandler(async (req, res) => {
 
 // Get an admin by ID
 const getAdminById = asyncHandler(async (req, res) => {
-  const admin = await Admin.findById(req.params.id).select("-password");
+  const admin = await User.findById(req.params.id).select("-password");
   if (!admin) {
     return apiError(res, 404, "Admin not found");
   }

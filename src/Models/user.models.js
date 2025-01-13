@@ -6,7 +6,6 @@ const userSchema = new mongoose.Schema(
   {
     fullname: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -21,13 +20,6 @@ const userSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      required: true,
-    },
-    role: {
-      type: String,
-      enum: ["customer", "admin"],
-      default: "customer",
-      required: true,
     },
     isActive: { type: Boolean, default: true },
     refreshToken: {
@@ -36,6 +28,15 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
     },
+    role: {
+      type: String,
+      enum: ["admin", "super-admin", "merchant", "customer"],
+      default: "customer",
+      required: true,
+    },
+    isDefaultSuperAdmin: { type: Boolean, default: false }, // Ensure this field is defined
+    resetPasswordToken: String,
+    resetPasswordExpiry: Date,
   },
   { timestamps: true }
 );

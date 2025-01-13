@@ -1,6 +1,6 @@
-import { Admin } from "../models/admin.models.js";
 import nodemailer from "nodemailer";
 import bcryptjs from "bcryptjs";
+import { User } from "../../Models/user.models.js";
 
 export const sendEmail = async ({ email, emailType, adminId, message }) => {
   try {
@@ -9,12 +9,12 @@ export const sendEmail = async ({ email, emailType, adminId, message }) => {
     if (adminId) {
       hashedToken = await bcryptjs.hash(adminId.toString(), 10);
       if (emailType === "VERIFY") {
-        await Admin.findByIdAndUpdate(adminId, {
+        await User.findByIdAndUpdate(adminId, {
           verifyToken: hashedToken,
           verifyTokenExpiry: Date.now() + 3600000,
         });
       } else if (emailType === "RESET") {
-        await Admin.findByIdAndUpdate(adminId, {
+        await User.findByIdAndUpdate(adminId, {
           forgotPasswordToken: hashedToken,
           forgotPasswordTokenExpiry: Date.now() + 3600000,
         });

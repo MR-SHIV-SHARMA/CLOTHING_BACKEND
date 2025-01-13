@@ -1,4 +1,3 @@
-import { Admin } from "../models/admin.models.js";
 import jwt from "jsonwebtoken";
 import { ActivityLog } from "../models/activityLog.models.js";
 import { apiError } from "../../utils/apiError.js";
@@ -6,11 +5,12 @@ import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import crypto from "crypto";
 import { sendEmail } from "../helpers/mailer.js";
+import { User } from "../../Models/user.models.js";
 
 // Generate Access and Refresh Tokens
 const generateAccessTokensAndRefreshTokens = async (adminId) => {
   try {
-    const admin = await Admin.findById(adminId);
+    const admin = await User.findById(adminId);
     const accessToken = admin.generateAccessToken();
     const refreshToken = admin.generateRefreshToken();
 
@@ -31,7 +31,7 @@ const login = asyncHandler(async (req, res) => {
     throw new apiError(422, "Email is required");
   }
 
-  const admin = await Admin.findOne({ email });
+  const admin = await User.findOne({ email });
 
   if (!admin) {
     throw new apiError(401, "Invalid credentials. Please try again");
@@ -48,7 +48,7 @@ const login = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } =
     await generateAccessTokensAndRefreshTokens(admin._id);
 
-  const loggedInAdmin = await Admin.findById(admin._id).select(
+  const loggedInAdmin = await User.findById(admin._id).select(
     "-password -refreshToken"
   );
 
@@ -96,7 +96,7 @@ const login = asyncHandler(async (req, res) => {
 
 // Logout an admin
 const logout = asyncHandler(async (req, res) => {
-  await Admin.findByIdAndUpdate(
+  await User.findByIdAndUpdate(
     req.admin._id,
     { $set: { refreshToken: undefined } },
     { new: true }
@@ -166,7 +166,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-    const admin = await Admin.findById(decodedToken?._id);
+    const admin = await User.findById(decodedToken?._id);
 
     if (!admin) {
       throw new apiError(401, "Invalid refresh token");
@@ -212,7 +212,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 // Forget Password
 const requestPasswordReset = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const admin = await Admin.findOne({ email });
+  const admin = await User.findOne({ email });
 
   if (!admin) {
     throw new apiError(404, "Admin not found");
@@ -252,7 +252,7 @@ const resetPasswordWithToken = asyncHandler(async (req, res) => {
 
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-  const admin = await Admin.findOne({
+  const admin = await User.findOne({
     resetPasswordToken: hashedToken,
     resetPasswordExpiry: { $gt: Date.now() },
   });
@@ -285,7 +285,7 @@ const resetPasswordWithToken = asyncHandler(async (req, res) => {
 // Reset Password for Logged-in Admin
 const resetPassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  const admin = await Admin.findById(req.admin._id);
+  const admin = await User.findById(req.admin._id);
 
   if (!admin) {
     throw new apiError(404, "Admin not found");
