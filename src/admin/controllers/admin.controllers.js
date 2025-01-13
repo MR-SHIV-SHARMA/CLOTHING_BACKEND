@@ -1,7 +1,7 @@
 import { Admin } from "../models/admin.models.js";
-import { apiError } from "../utils/apiError.js";
-import { apiResponse } from "../utils/apiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { apiError } from "../../utils/apiError.js";
+import { apiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
 // Get all admins with pagination
 const getAllAdmins = asyncHandler(async (req, res) => {

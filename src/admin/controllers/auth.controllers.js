@@ -1,9 +1,9 @@
 import { Admin } from "../models/admin.models.js";
 import jwt from "jsonwebtoken";
 import { ActivityLog } from "../models/activityLog.models.js";
-import { apiError } from "../utils/apiError.js";
-import { apiResponse } from "../utils/apiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { apiError } from "../../utils/apiError.js";
+import { apiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 import crypto from "crypto";
 import { sendEmail } from "../helpers/mailer.js";
 

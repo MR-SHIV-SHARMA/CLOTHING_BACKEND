@@ -1,9 +1,9 @@
 import { Admin } from "../models/admin.models.js";
 import { Merchant } from "../models/merchant.models.js";
 import { ActivityLog } from "../models/activityLog.models.js";
-import { apiError } from "../utils/apiError.js";
-import { apiResponse } from "../utils/apiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { apiError } from "../../utils/apiError.js";
+import { apiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 import { sendEmail } from "../helpers/mailer.js";
 
 // Function to Create Default Super Admin
