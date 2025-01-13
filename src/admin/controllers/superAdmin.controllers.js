@@ -297,6 +297,7 @@ const createMerchant = asyncHandler(async (req, res) => {
     throw new apiError(422, "A merchant already exists with this email!");
   }
 
+  // Create a new user for the merchant
   const newMerchant = new User({
     email,
     password,
@@ -304,6 +305,27 @@ const createMerchant = asyncHandler(async (req, res) => {
   });
 
   await newMerchant.save();
+
+  // Create a corresponding merchant record with placeholder data
+  const merchant = new Merchant({
+    _id: newMerchant._id, // use the same ID
+    email: newMerchant.email,
+    name: "N/A",
+    phone: "0000000000",
+    panCard: "N/A",
+    aadhaarCard: "N/A",
+    gstNumber: "N/A",
+    companyName: "N/A",
+    ownerName: "N/A",
+    storeLocation: {
+      address: "N/A",
+      city: "N/A",
+      state: "N/A",
+      postalCode: "000000",
+    },
+  });
+
+  await merchant.save();
 
   const createdMerchant = await User.findById(newMerchant._id).select(
     "-password -refreshToken"
@@ -320,10 +342,9 @@ const createMerchant = asyncHandler(async (req, res) => {
     message: `<p>Welcome Merchant, your merchant account has been created. Please verify your email.</p>`,
   });
 
-  // Log the action without req.admin._id
+  // Log the action
   await ActivityLog.create({
-    // Use a placeholder or remove this line if not needed
-    adminId: newMerchant._id, // or you can remove this line if logging is not necessary
+    adminId: newMerchant._id,
     action: `Created a merchant with email: ${email}`,
   });
 
@@ -371,13 +392,13 @@ const deleteMerchantById = asyncHandler(async (req, res) => {
 });
 
 // Update merchant by ID
-const updateOrCreateMerchantById = asyncHandler(async (req, res) => {
+const updateMerchantById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   // Extract required fields
   const { ownerName, aadhaarCard, panCard } = req.body;
 
-  // Check required fields for creation
+  // Check required fields for update
   if (!ownerName || !aadhaarCard || !panCard) {
     return res.status(400).json({
       message: "Missing required fields: ownerName, aadhaarCard, or panCard",
@@ -385,44 +406,11 @@ const updateOrCreateMerchantById = asyncHandler(async (req, res) => {
   }
 
   // Check if a merchant exists
-  let merchant = await Merchant.findById(id);
-
-  // Fetch the registered email if the merchant exists
-  let registeredEmail = null;
-  if (merchant) {
-    const adminRecord = await User.findOne({ _id: id, role: "merchant" });
-    if (adminRecord) {
-      registeredEmail = adminRecord.email;
-    }
-  }
-
+  const merchant = await Merchant.findById(id);
   if (!merchant) {
-    // Create new merchant if not found
-    try {
-      merchant = new Merchant({ _id: id, ...req.body });
-      await merchant.save();
-
-      // Log activity
-      await ActivityLog.create({
-        action: "New Merchant created",
-        adminId: merchant._id,
-        details: `Created Merchant ID: ${id}`,
-      });
-
-      return res.status(201).json({
-        message: "New Merchant created successfully!",
-        merchant,
-      });
-    } catch (error) {
-      if (error.name === "ValidationError") {
-        const messages = Object.values(error.errors).map((err) => err.message);
-        return res.status(400).json({
-          message: "Validation Error",
-          errors: messages,
-        });
-      }
-      throw error;
-    }
+    return res.status(404).json({
+      message: "Merchant not found. Please register the merchant first.",
+    });
   }
 
   // Update the existing merchant
@@ -436,13 +424,12 @@ const updateOrCreateMerchantById = asyncHandler(async (req, res) => {
   await ActivityLog.create({
     action: "Merchant details updated successfully",
     adminId: merchant._id,
-    details: `Updated Merchant ID: ${id} (Registered Email: ${registeredEmail})`,
+    details: `Updated Merchant ID: ${id}`,
   });
 
   return res.status(200).json({
     message: "Merchant updated successfully!",
     updatedMerchant,
-    registeredEmail, // Include the registered email in the response
   });
 });
 
@@ -520,7 +507,7 @@ export {
   superAdminDeleteAdmin,
   createMerchant,
   deleteMerchantById,
-  updateOrCreateMerchantById,
+  updateMerchantById,
   getMerchantAccountById,
   getAllMerchantAccounts,
 };

@@ -10,7 +10,6 @@ const merchantSchema = new mongoose.Schema(
     gstNumber: { type: String, unique: true },
     companyName: { type: String, required: true, trim: true },
     ownerName: { type: String, required: true, trim: true },
-    productCategories: { type: [String], required: true },
     storeLocation: {
       address: { type: String },
       city: { type: String },

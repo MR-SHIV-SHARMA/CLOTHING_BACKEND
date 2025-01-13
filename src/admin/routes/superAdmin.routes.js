@@ -8,7 +8,7 @@ import {
   superAdminDeleteAdmin,
   createMerchant,
   deleteMerchantById,
-  updateOrCreateMerchantById,
+  updateMerchantById,
   getMerchantAccountById,
   getAllMerchantAccounts,
 } from "../controllers/superAdmin.controllers.js";
@@ -85,7 +85,7 @@ router.patch(
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["merchant"]),
-  updateOrCreateMerchantById
+  updateMerchantById
 );
 
 router.get(
