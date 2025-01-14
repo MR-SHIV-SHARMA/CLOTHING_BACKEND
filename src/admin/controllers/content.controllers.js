@@ -233,22 +233,50 @@ const getAllProducts = asyncHandler(async (req, res) => {
 });
 
 // Get a product by ID
-const getProductById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+const getProductById = asyncHandler(async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-  const product = await Product.findById(id).lean();
-  if (!product || product.isDeleted) {
-    throw new apiError(404, "Product not found");
+    // Check if ID is provided
+    if (!id) {
+      throw new apiError(400, "Product ID is required");
+    }
+
+    // Ensure req.admin is valid
+    if (!req.admin || !req.admin._id) {
+      throw new apiError(401, "Admin information is missing or invalid");
+    }
+
+    // Find the product by ID
+    const product = await Product.findById(id).lean();
+    if (!product || product.isDeleted) {
+      throw new apiError(404, "Product not found");
+    }
+
+    // Fetch the merchant
+    const merchant = await User.findById(req.admin._id).select("merchant");
+    if (!merchant) {
+      throw new apiError(404, "Merchant not found");
+    }
+
+    // Ensure the product has a merchant
+    product.merchant = product.merchant || merchant._id; // Use existing merchant or set to current admin's merchant
+    if (!product.merchant) {
+      throw new apiError(500, "Product merchant information is missing");
+    }
+
+    // Ensure the user is authorized to view
+    if (product.merchant.toString() !== req.admin._id.toString()) {
+      throw new apiError(403, "You are not authorized to view this product");
+    }
+
+    // Respond with the product
+    return res
+      .status(200)
+      .json(new apiResponse(200, product, "Product fetched successfully"));
+  } catch (error) {
+    next(error); // Pass errors to the error-handling middleware
   }
-
-  // Ensure the user is authorized to view
-  if (product.merchant.toString() !== req.user._id.toString()) {
-    throw new apiError(403, "You are not authorized to view this product.");
-  }
-
-  return res
-    .status(200)
-    .json(new apiResponse(200, product, "Product fetched successfully"));
 });
 
 export {

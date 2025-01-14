@@ -52,15 +52,15 @@ router.get(
   "/getAllProducts",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin", "merchant"]),
+  checkRole(["admin", "super-admin", "merchant", "customer"]),
   getAllProducts
 );
 
 router.get(
-  "/getProductById",
+  "/getProductById/:id",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin", "merchant"]),
+  checkRole(["admin", "super-admin", "merchant", "customer"]),
   getProductById
 );
 
