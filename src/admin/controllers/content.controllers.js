@@ -205,7 +205,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     season,
   } = req.query;
 
-  const query = { merchant: req.user._id, isDeleted: { $ne: true } };
+  const query = { isDeleted: { $ne: true } };
 
   if (category) query.category = category;
   if (brand) query.brand = brand;
@@ -222,6 +222,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     .limit(limit * 1)
     .skip((page - 1) * limit)
     .exec();
+
   const count = await Product.countDocuments(query);
 
   return res.status(200).json(
