@@ -5,33 +5,28 @@ import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { uploadFileToCloudinary } from "../../utils/cloudinary.js";
 import { User } from "../../Models/user.models.js";
+import { Merchant } from "../models/merchant.models.js";
 
 // Create a new product
 const createProduct = asyncHandler(async (req, res) => {
   try {
     const productData = req.body;
 
-    // Validate essential fields
     if (
       !productData.name ||
       !productData.price ||
       !productData.category ||
-      !productData.stock
+      !productData.stock ||
+      !productData.description ||
+      !productData.gender
     ) {
       throw new apiError(400, "Name, price, category, and stock are required.");
     }
 
-    // Validate additional details
-    if (!productData.description || !productData.gender) {
-      throw new apiError(400, "Description and gender are required.");
-    }
-
-    // If req.files is an object (field-based uploads), extract paths
     let images = [];
     if (Array.isArray(req.files)) {
       images = req.files.map((file) => file.path);
     } else {
-      // Assuming files are uploaded under the "images" field
       images = (req.files.images || []).map((file) => file.path);
     }
 
@@ -39,7 +34,6 @@ const createProduct = asyncHandler(async (req, res) => {
       throw new apiError(400, "No valid image files provided.");
     }
 
-    // Simulate uploading images to a cloud service and getting URLs
     const uploadedImages = await Promise.all(
       images.map((image) => uploadFileToCloudinary(image))
     );
@@ -49,15 +43,17 @@ const createProduct = asyncHandler(async (req, res) => {
       throw new apiError(400, "Error while uploading images.");
     }
 
-    // Attach image URLs to product data
     productData.images = imageUrls;
 
     // Retrieve and validate merchant
-    const merchant = await User.findById(req.admin._id).select("merchant");
-    if (!merchant) {
+    const user = await User.findById(req.admin._id).populate("merchant");
+    console.log("User:", user);
+    if (!user) {
       throw new apiError(404, "Merchant not found.");
     }
-    productData.merchant = merchant._id;
+
+    // Attach merchant ID to product data
+    productData.merchant = user._id;
 
     // Validate sizes
     if (
@@ -118,6 +114,20 @@ const createProduct = asyncHandler(async (req, res) => {
     // Create the product
     const newProduct = await Product.create(productData);
 
+    // Update the merchant's products list
+    await Merchant.findByIdAndUpdate(
+      user._id,
+      { $push: { products: newProduct._id } },
+      { new: true }
+    );
+
+    // Update the product with merchant information
+    await Product.findByIdAndUpdate(
+      newProduct._id,
+      { merchant: user._id },
+      { new: true }
+    );
+
     // Log the activity
     await ActivityLog.create({
       action: "CREATE",
@@ -141,6 +151,11 @@ const createProduct = asyncHandler(async (req, res) => {
 const updateProductById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const productData = req.body;
+
+  // Ensure req.user is valid
+  if (!req.user || !req.user._id) {
+    throw new apiError(401, "User information is missing or invalid");
+  }
 
   // Validate at least one field to update
   if (Object.keys(productData).length === 0) {
@@ -169,6 +184,11 @@ const updateProductById = asyncHandler(async (req, res) => {
 // Soft delete a product by ID
 const deleteProductById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
+  // Ensure req.user is valid
+  if (!req.user || !req.user._id) {
+    throw new apiError(401, "User information is missing or invalid");
+  }
 
   const product = await Product.findById(id);
   if (!product) {
@@ -225,6 +245,9 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
   const count = await Product.countDocuments(query);
 
+  console.log("Query:", query);
+  console.log("Products:", products);
+
   return res.status(200).json(
     new apiResponse(200, products, "Products fetched successfully", {
       totalPages: Math.ceil(count / limit),
@@ -280,10 +303,59 @@ const getProductById = asyncHandler(async (req, res, next) => {
   }
 });
 
+// Get all products by merchant with advanced filtering
+const getAllProductsbyMerchant = asyncHandler(async (req, res) => {
+  // Ensure req.user is valid
+  if (!req.user || !req.user._id) {
+    throw new apiError(401, "User information is missing or invalid");
+  }
+
+  const {
+    page = 1,
+    limit = 10,
+    category,
+    brand,
+    priceRange,
+    availability,
+    rating,
+    season,
+  } = req.query;
+
+  const query = { isDeleted: { $ne: true }, merchant: req.user._id };
+  console.log("Query:", query);
+  console.log("Merchant ID:", req.user._id);
+
+  if (category) query.category = category;
+  if (brand) query.brand = brand;
+  if (priceRange) {
+    const [minPrice, maxPrice] = priceRange.split(",").map(Number);
+    query.price = { $gte: minPrice, $lte: maxPrice };
+  }
+  if (availability) query.isAvailable = availability === "true";
+  if (rating) query["ratings.average"] = { $gte: Number(rating) };
+  if (season) query.season = season;
+
+  const products = await Product.find(query)
+    .lean()
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
+    .exec();
+
+  const count = await Product.countDocuments(query);
+
+  return res.status(200).json(
+    new apiResponse(200, products, "Products fetched successfully", {
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+    })
+  );
+});
+
 export {
   createProduct,
   updateProductById,
   deleteProductById,
   getAllProducts,
   getProductById,
+  getAllProductsbyMerchant,
 };

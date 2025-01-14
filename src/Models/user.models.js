@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema(
     isDefaultSuperAdmin: { type: Boolean, default: false }, // Ensure this field is defined
     resetPasswordToken: String,
     resetPasswordExpiry: Date,
+    merchant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Merchant',
+    },
   },
   { timestamps: true }
 );
