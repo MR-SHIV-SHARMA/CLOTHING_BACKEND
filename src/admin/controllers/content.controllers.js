@@ -52,7 +52,11 @@ const createProduct = asyncHandler(async (req, res) => {
     // Attach image URLs to product data
     productData.images = imageUrls;
 
-    // Associate the product with the merchant
+    // Retrieve and validate merchant
+    const merchant = await User.findById(req.admin._id).select("merchant");
+    if (!merchant) {
+      throw new apiError(404, "Merchant not found.");
+    }
     productData.merchant = merchant._id;
 
     // Validate sizes

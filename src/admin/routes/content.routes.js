@@ -43,7 +43,7 @@ router.post(
   "/createProduct",
   adminRateLimiter,
   authenticateAdmin,
-  upload.fields([{ name: "images", maxCount: 5 }]),
+  upload.fields([{ name: "images", maxCount: 10 }]),
   checkRole(["admin", "super-admin", "merchant"]),
   createProduct
 );
