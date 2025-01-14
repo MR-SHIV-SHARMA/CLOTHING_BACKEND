@@ -10,6 +10,7 @@ import {
 import { checkRole } from "../middleware/roleMiddleware.js";
 import { adminRateLimiter } from "../middleware/rateLimiter.js";
 import authenticateAdmin from "../middleware/authMiddleware.js";
+import { upload } from "../../middlewares/multer.middlewares.js";
 
 const router = express.Router();
 
@@ -42,6 +43,7 @@ router.post(
   "/createProduct",
   adminRateLimiter,
   authenticateAdmin,
+  upload.fields([{ name: "images", maxCount: 5 }]),
   checkRole(["admin", "super-admin", "merchant"]),
   createProduct
 );

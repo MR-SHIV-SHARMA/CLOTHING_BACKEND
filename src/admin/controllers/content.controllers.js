@@ -1,105 +1,136 @@
-import { Admin } from "../models/admin.models.js";
 import { Product } from "../models/product.models.js";
 import { ActivityLog } from "../models/activityLog.models.js";
 import { apiError } from "../../utils/apiError.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { uploadFileToCloudinary } from "../../utils/cloudinary.js";
+import { User } from "../../Models/user.models.js";
 
 // Create a new product
 const createProduct = asyncHandler(async (req, res) => {
-  const productData = req.body;
+  try {
+    const productData = req.body;
 
-  // Validate essential fields
-  if (
-    !productData.name ||
-    !productData.price ||
-    !productData.category ||
-    !productData.stock
-  ) {
-    throw new apiError(400, "Name, price, category, and stock are required.");
-  }
+    // Validate essential fields
+    if (
+      !productData.name ||
+      !productData.price ||
+      !productData.category ||
+      !productData.stock
+    ) {
+      throw new apiError(400, "Name, price, category, and stock are required.");
+    }
 
-  // Validate additional details about the product
-  if (
-    !productData.description ||
-    !productData.gender ||
-    !productData.images ||
-    productData.images.length === 0
-  ) {
-    throw new apiError(
-      400,
-      "Description, gender, and at least one image are required."
+    // Validate additional details
+    if (!productData.description || !productData.gender) {
+      throw new apiError(400, "Description and gender are required.");
+    }
+
+    // If req.files is an object (field-based uploads), extract paths
+    let images = [];
+    if (Array.isArray(req.files)) {
+      images = req.files.map((file) => file.path);
+    } else {
+      // Assuming files are uploaded under the "images" field
+      images = (req.files.images || []).map((file) => file.path);
+    }
+
+    if (images.length === 0) {
+      throw new apiError(400, "No valid image files provided.");
+    }
+
+    // Simulate uploading images to a cloud service and getting URLs
+    const uploadedImages = await Promise.all(
+      images.map((image) => uploadFileToCloudinary(image))
     );
-  }
 
-  // Associate the product with the merchant
-  productData.merchant = req.user._id;
-
-  // Validate sizes
-  if (
-    productData.sizes &&
-    (!Array.isArray(productData.sizes) ||
-      productData.sizes.some((size) => !size.size || size.stock < 0))
-  ) {
-    throw new apiError(
-      400,
-      "Sizes must be an array of objects with 'size' and valid 'stock'."
-    );
-  }
-
-  // Validate colors
-  if (
-    productData.colors &&
-    (!Array.isArray(productData.colors) ||
-      productData.colors.some((color) => !color.color || color.stock < 0))
-  ) {
-    throw new apiError(
-      400,
-      "Colors must be an array of objects with 'color' and valid 'stock'."
-    );
-  }
-
-  // Validate discount details if provided
-  if (productData.discount) {
-    const { percentage, startDate, endDate } = productData.discount;
-    if (percentage < 0 || percentage > 100) {
-      throw new apiError(400, "Discount percentage must be between 0 and 100.");
+    const imageUrls = uploadedImages.map((img) => img.url);
+    if (imageUrls.some((url) => !url)) {
+      throw new apiError(400, "Error while uploading images.");
     }
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new apiError(400, "Discount start date cannot be after end date.");
+
+    // Attach image URLs to product data
+    productData.images = imageUrls;
+
+    // Associate the product with the merchant
+    productData.merchant = merchant._id;
+
+    // Validate sizes
+    if (
+      productData.sizes &&
+      (!Array.isArray(productData.sizes) ||
+        productData.sizes.some((size) => !size.size || size.stock < 0))
+    ) {
+      throw new apiError(
+        400,
+        "Sizes must be an array of objects with 'size' and valid 'stock'."
+      );
     }
+
+    // Validate colors
+    if (
+      productData.colors &&
+      (!Array.isArray(productData.colors) ||
+        productData.colors.some((color) => !color.color || color.stock < 0))
+    ) {
+      throw new apiError(
+        400,
+        "Colors must be an array of objects with 'color' and valid 'stock'."
+      );
+    }
+
+    // Validate discount
+    if (productData.discount) {
+      const { percentage, startDate, endDate } = productData.discount;
+      if (percentage < 0 || percentage > 100) {
+        throw new apiError(
+          400,
+          "Discount percentage must be between 0 and 100."
+        );
+      }
+      if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+        throw new apiError(
+          400,
+          "Discount start date cannot be after end date."
+        );
+      }
+    }
+
+    // Validate ratings
+    if (productData.ratings) {
+      const { average, count } = productData.ratings;
+      if (average < 0 || average > 5) {
+        throw new apiError(400, "Average rating must be between 0 and 5.");
+      }
+      if (count < 0) {
+        throw new apiError(400, "Rating count cannot be negative.");
+      }
+    }
+
+    // Default values for optional fields
+    productData.isAvailable = productData.isAvailable ?? true;
+    productData.isFeatured = productData.isFeatured ?? false;
+
+    // Create the product
+    const newProduct = await Product.create(productData);
+
+    // Log the activity
+    await ActivityLog.create({
+      action: "CREATE",
+      productId: newProduct._id,
+      adminId: req.admin._id,
+      description: `Product '${newProduct.name}' created successfully.`,
+    });
+
+    return res
+      .status(201)
+      .json(new apiResponse(201, newProduct, "Product created successfully"));
+  } catch (error) {
+    // Handle errors gracefully
+    return res
+      .status(error.statusCode || 500)
+      .json(new apiResponse(error.statusCode || 500, null, error.message));
   }
-
-  // Validate ratings (if provided)
-  if (productData.ratings) {
-    const { average, count } = productData.ratings;
-    if (average < 0 || average > 5) {
-      throw new apiError(400, "Average rating must be between 0 and 5.");
-    }
-    if (count < 0) {
-      throw new apiError(400, "Rating count cannot be negative.");
-    }
-  }
-
-  // Add default values for optional fields (if not provided)
-  productData.isAvailable = productData.isAvailable ?? true;
-  productData.isFeatured = productData.isFeatured ?? false;
-
-  // Create the product
-  const newProduct = await Product.create(productData);
-
-  // Log the activity
-  await logActivity({
-    action: "CREATE",
-    productId: newProduct._id,
-    userId: req.user._id,
-    description: `Product '${newProduct.name}' created successfully.`,
-  });
-
-  return res
-    .status(201)
-    .json(new apiResponse(201, newProduct, "Product created successfully"));
 });
 
 // Update a product by ID
