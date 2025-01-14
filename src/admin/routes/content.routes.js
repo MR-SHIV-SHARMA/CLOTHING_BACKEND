@@ -6,6 +6,7 @@ import {
   updateProductById,
   deleteProductById,
   createProduct,
+  getAllProductsbyMerchant
 } from "../controllers/content.controllers.js";
 import { checkRole } from "../middleware/roleMiddleware.js";
 import { adminRateLimiter } from "../middleware/rateLimiter.js";
@@ -54,6 +55,14 @@ router.get(
   authenticateAdmin,
   checkRole(["admin", "super-admin", "merchant", "customer"]),
   getAllProducts
+);
+
+router.get(
+  "/getAllProductsbyMerchant",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["admin", "super-admin", "merchant", "customer"]),
+  getAllProductsbyMerchant
 );
 
 router.get(

@@ -66,6 +66,11 @@ const productSchema = new mongoose.Schema(
     },
     fit: { type: String, enum: ["Regular", "Slim", "Loose"] },
     origin: { type: String },
+    merchant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Merchant",
+      required: true,
+    },
   },
   { timestamps: true }
 );

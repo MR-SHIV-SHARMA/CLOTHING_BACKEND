@@ -311,7 +311,7 @@ const createMerchant = asyncHandler(async (req, res) => {
     _id: newMerchant._id, // use the same ID
     email: newMerchant.email,
     name: "N/A",
-    phone: "0000000000",
+    phone: "N/A",
     panCard: "N/A",
     aadhaarCard: "N/A",
     gstNumber: "N/A",
@@ -321,7 +321,7 @@ const createMerchant = asyncHandler(async (req, res) => {
       address: "N/A",
       city: "N/A",
       state: "N/A",
-      postalCode: "000000",
+      postalCode: "N/A",
     },
   });
 
