@@ -19,7 +19,7 @@ const getAllAdmins = asyncHandler(async (req, res) => {
   const totalAdmins = await User.countDocuments(query);
 
   res.status(200).json(
-    apiResponse(200, "Admins retrieved successfully", {
+    new apiResponse(200, "Admins retrieved successfully", {
       admins,
       totalAdmins,
       currentPage: page,
@@ -34,7 +34,9 @@ const getAdminById = asyncHandler(async (req, res) => {
   if (!admin) {
     return apiError(res, 404, "Admin not found");
   }
-  res.status(200).json(apiResponse(200, "Admin retrieved successfully", admin));
+  res
+    .status(200)
+    .json(new apiResponse(200, "Admin retrieved successfully", admin));
 });
 
 export { getAdminById, getAllAdmins };
