@@ -47,7 +47,6 @@ const createProduct = asyncHandler(async (req, res) => {
 
     // Retrieve and validate merchant
     const user = await User.findById(req.admin._id).populate("merchant");
-    console.log("User:", user);
     if (!user) {
       throw new apiError(404, "Merchant not found.");
     }
@@ -245,9 +244,6 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
   const count = await Product.countDocuments(query);
 
-  console.log("Query:", query);
-  console.log("Products:", products);
-
   return res.status(200).json(
     new apiResponse(200, products, "Products fetched successfully", {
       totalPages: Math.ceil(count / limit),
@@ -322,8 +318,6 @@ const getAllProductsbyMerchant = asyncHandler(async (req, res) => {
   } = req.query;
 
   const query = { isDeleted: { $ne: true }, merchant: req.user._id };
-  console.log("Query:", query);
-  console.log("Merchant ID:", req.user._id);
 
   if (category) query.category = category;
   if (brand) query.brand = brand;
@@ -345,6 +339,7 @@ const getAllProductsbyMerchant = asyncHandler(async (req, res) => {
 
   return res.status(200).json(
     new apiResponse(200, products, "Products fetched successfully", {
+      totalProducts: count, // Total number of products
       totalPages: Math.ceil(count / limit),
       currentPage: Number(page),
     })

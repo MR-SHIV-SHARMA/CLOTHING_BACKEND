@@ -15,13 +15,16 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
   try {
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    req.admin = await User.findById(decodedToken?._id).select(
+    const user = await User.findById(decodedToken?._id).select(
       "-password -refreshToken"
     );
 
-    if (!req.admin) {
+    if (!user) {
       return next(new apiError(401, "Invalid token"));
     }
+
+    req.user = user;
+    req.admin = user;
 
     next();
   } catch (error) {
