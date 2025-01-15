@@ -532,10 +532,20 @@ const createBrand = asyncHandler(async (req, res) => {
   }
 
   // Check if the merchant already has a brand
-  const existingBrand = await Brand.findOne({ merchant: merchant._id });
-  if (existingBrand) {
+  const existingBrandForMerchant = await Brand.findOne({
+    merchant: merchant._id,
+  });
+  if (existingBrandForMerchant) {
     return res.status(400).json({
       message: "A brand has already been created for this merchant.",
+    });
+  }
+
+  // Check if the brand name already exists for another merchant
+  const existingBrandWithName = await Brand.findOne({ name: brandName });
+  if (existingBrandWithName) {
+    return res.status(400).json({
+      message: `The brand name "${brandName}" has already been registered by another merchant.`,
     });
   }
 
@@ -543,20 +553,20 @@ const createBrand = asyncHandler(async (req, res) => {
   const logoLocalPath = req.files?.logo[0]?.path;
 
   if (!logoLocalPath) {
-    throw new apiError(400, "Please select a valid image file for your logo");
+    throw new apiError(400, "Please select a valid image file for your logo.");
   }
 
   const logo = await uploadFileToCloudinary(logoLocalPath);
 
   if (!logo) {
-    throw new apiError(400, "Failed to upload logo file. Please try again");
+    throw new apiError(400, "Failed to upload logo file. Please try again.");
   }
 
   // Create the brand
   const brand = await Brand.create({
     name: brandName,
     logo: logo.url,
-    merchant: merchant,
+    merchant: merchant._id, // Store merchant ID instead of the entire object
   });
 
   // Link the brand to the merchant
