@@ -24,14 +24,17 @@ const registerUser = asyncHandler(async (req, res) => {
   const { fullname, email, password, phoneNumber } = req.body;
 
   if (
-    [fullname, email, password, phoneNumber].some(
-      (field) => field?.trim() === ""
-    )
+    !fullname?.trim() ||
+    !password?.trim() ||
+    (!email?.trim() && !phoneNumber?.trim())
   ) {
-    throw new apiError(422, "Please fill in all the required fields");
+    throw new apiError(
+      422,
+      "Please fill in all the required fields, including either email or phone number"
+    );
   }
 
-  const existedUser = await User.findOne({ email });
+  const existedUser = await User.findOne({ email, phoneNumber });
   if (existedUser) {
     throw new apiError(
       422,
