@@ -5,6 +5,7 @@ import {
   getCategoryById,
   updateCategoryById,
   deleteCategoryById,
+  seedCategories,
 } from "../controllers/category.controllers.js";
 import { checkRole } from "../middleware/roleMiddleware.js";
 import { adminRateLimiter } from "../middleware/rateLimiter.js";
@@ -44,5 +45,7 @@ router.delete(
   checkRole(["super-admin"]),
   deleteCategoryById
 );
+
+router.post("/categories/seed", seedCategories);
 
 export default router;
