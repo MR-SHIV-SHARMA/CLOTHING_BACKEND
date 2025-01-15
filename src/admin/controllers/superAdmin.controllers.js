@@ -459,13 +459,13 @@ const createBrand = asyncHandler(async (req, res) => {
   const logoLocalPath = req.files?.logo[0]?.path;
 
   if (!logoLocalPath) {
-    throw new apiError(400, "Please select a valid image file for your avatar");
+    throw new apiError(400, "Please select a valid image file for your logo");
   }
 
   const logo = await uploadFileToCloudinary(logoLocalPath);
 
   if (!logo) {
-    throw new apiError(400, "Failed to upload avatar file. Please try again");
+    throw new apiError(400, "Failed to upload logo file. Please try again");
   }
 
   // Create the brand
@@ -489,32 +489,38 @@ const createBrand = asyncHandler(async (req, res) => {
 // Update a brand by ID
 const updateBrandById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { brandData } = req.body;
+  const { brandName } = req.body;
 
   // Validate required fields
-  if (!brandData.name) {
+  if (!brandName) {
     throw new apiError(400, "Brand name is required.");
   }
 
+  const brand = await Brand.findById(id);
+  if (!brand) {
+    throw new apiError(404, "Brand not found");
+  }
+
   // Upload brand logo to Cloudinary (if provided)
-  const logoLocalPath = req.files?.logo[0]?.path;
+  const logoLocalPath = req.file?.path;
 
   if (!logoLocalPath) {
-    throw new apiError(400, "Please select a valid image file for your avatar");
+    throw new apiError(400, "Please select a valid image file for your logo");
   }
 
   const logo = await uploadFileToCloudinary(logoLocalPath);
 
   if (!logo) {
-    throw new apiError(400, "Failed to upload avatar file. Please try again");
+    throw new apiError(400, "Failed to upload logo file. Please try again");
   }
 
   const updatedBrand = await Brand.findByIdAndUpdate(
     id,
     {
-      name: brandData.name,
-      logo: logo.url,
-      merchant: brandData.merchant,
+      $set: {
+        name: brandName,
+        logo: logo.url,
+      },
     },
     { new: true }
   );
@@ -523,7 +529,9 @@ const updateBrandById = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .json(new apiResponse(200, updatedBrand, "Brand updated successfully", true));
+    .json(
+      new apiResponse(200, updatedBrand, "Brand updated successfully", true)
+    );
 });
 
 // get merchant by ID

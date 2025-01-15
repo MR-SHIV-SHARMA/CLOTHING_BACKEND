@@ -104,7 +104,7 @@ router.post(
 // Update a brand by ID
 router.patch(
   "/super-admin/updateBrand/:id",
-  upload.fields([{ name: "logo", maxCount: 1 }]),
+  upload.single("logo"),
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["merchant"]),
