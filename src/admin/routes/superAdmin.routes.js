@@ -13,6 +13,7 @@ import {
   getAllMerchantAccounts,
   createBrand,
   updateBrandById,
+  deleteBrandById,
 } from "../controllers/superAdmin.controllers.js";
 import { checkRole } from "../middleware/roleMiddleware.js";
 import { upload } from "../../middlewares/multer.middlewares.js";
@@ -109,6 +110,15 @@ router.patch(
   authenticateAdmin,
   checkRole(["merchant"]),
   updateBrandById
+);
+
+// Delete a brand by ID
+router.delete(
+  "/super-admin/deleteBrand/:id",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["merchant"]),
+  deleteBrandById
 );
 
 router.get(

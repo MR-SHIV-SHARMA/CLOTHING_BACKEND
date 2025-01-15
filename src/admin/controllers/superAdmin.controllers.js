@@ -435,6 +435,72 @@ const updateMerchantById = asyncHandler(async (req, res) => {
   });
 });
 
+// get merchant by ID
+const getMerchantAccountById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find merchant by ID
+    const merchant = await User.findById(id);
+
+    if (!merchant) {
+      return res.status(404).json({
+        message: "Merchant not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Merchant details retrieved successfully!",
+      merchant,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred",
+      error: error.message,
+    });
+  }
+});
+
+// Get all merchant accounts
+const getAllMerchantAccounts = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, sort = "createdAt" } = req.query; // Default values for pagination and sorting
+
+  try {
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * limit;
+
+    // Fetch merchants with pagination and sorting
+    const merchants = await User.find({ role: "merchant" }) // Filter for merchants
+      .sort({ [sort]: 1 }) // Sort by the specified field (ascending by default)
+      .skip(skip)
+      .limit(Number(limit));
+
+    if (!merchants || merchants.length === 0) {
+      return res.status(404).json({
+        message: "No merchants found",
+      });
+    }
+
+    // Get the total count of merchants for pagination info
+    const totalMerchants = await User.countDocuments({ role: "merchant" }); // Count only merchants
+
+    return res.status(200).json({
+      message: "Merchants retrieved successfully!",
+      merchants,
+      pagination: {
+        totalMerchants,
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalMerchants / limit),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "An unexpected error occurred",
+      error: error.message,
+    });
+  }
+});
+
 // Create a new brand for a merchant
 const createBrand = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -534,70 +600,16 @@ const updateBrandById = asyncHandler(async (req, res) => {
     );
 });
 
-// get merchant by ID
-const getMerchantAccountById = asyncHandler(async (req, res) => {
+// Delete a brand by ID
+const deleteBrandById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-
-  try {
-    // Find merchant by ID
-    const merchant = await User.findById(id);
-
-    if (!merchant) {
-      return res.status(404).json({
-        message: "Merchant not found",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Merchant details retrieved successfully!",
-      merchant,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "An unexpected error occurred",
-      error: error.message,
-    });
+  const deletedBrand = await Brand.findByIdAndDelete(id);
+  if (!deletedBrand) {
+    throw new apiError(404, "Brand not found");
   }
-});
-
-// Get all merchant accounts
-const getAllMerchantAccounts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, sort = "createdAt" } = req.query; // Default values for pagination and sorting
-
-  try {
-    // Calculate the number of documents to skip
-    const skip = (page - 1) * limit;
-
-    // Fetch merchants with pagination and sorting
-    const merchants = await User.find({ role: "merchant" }) // Filter for merchants
-      .sort({ [sort]: 1 }) // Sort by the specified field (ascending by default)
-      .skip(skip)
-      .limit(Number(limit));
-
-    if (!merchants || merchants.length === 0) {
-      return res.status(404).json({
-        message: "No merchants found",
-      });
-    }
-
-    // Get the total count of merchants for pagination info
-    const totalMerchants = await User.countDocuments({ role: "merchant" }); // Count only merchants
-
-    return res.status(200).json({
-      message: "Merchants retrieved successfully!",
-      merchants,
-      pagination: {
-        totalMerchants,
-        currentPage: Number(page),
-        totalPages: Math.ceil(totalMerchants / limit),
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "An unexpected error occurred",
-      error: error.message,
-    });
-  }
+  return res
+    .status(200)
+    .json(new apiResponse(200, {}, "Brand deleted successfully"));
 });
 
 export {
@@ -613,4 +625,5 @@ export {
   getAllMerchantAccounts,
   createBrand,
   updateBrandById,
+  deleteBrandById,
 };
