@@ -290,11 +290,8 @@ const createMerchant = asyncHandler(async (req, res) => {
     throw new apiError(422, "Email and password are required!");
   }
 
-  const existingMerchant = await User.findOne({
-    email,
-    role: "merchant",
-  });
-
+  // Check if a merchant with the email already exists
+  const existingMerchant = await User.findOne({ email, role: "merchant" });
   if (existingMerchant) {
     throw new apiError(422, "A merchant already exists with this email!");
   }
@@ -310,31 +307,44 @@ const createMerchant = asyncHandler(async (req, res) => {
 
   // Create a corresponding merchant record with placeholder data
   const merchant = new Merchant({
-    _id: newMerchant._id, // use the same ID
+    _id: newMerchant._id,
     email: newMerchant.email,
     name: "N/A",
-    phone: "N/A",
-    panCard: "N/A",
-    aadhaarCard: "N/A",
-    gstNumber: "N/A",
+    phone: Math.floor(Math.random() * 10000000000)
+      .toString()
+      .padStart(10, "0"), // Random 10-digit phone
+    panCard: `PAN${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+    aadhaarCard: Math.floor(Math.random() * 1000000000000)
+      .toString()
+      .padStart(12, "0"), // Random 12-digit Aadhaar
+    gstNumber: `GST${Math.random().toString(36).substr(2, 10).toUpperCase()}`,
     companyName: "N/A",
     ownerName: "N/A",
     storeLocation: {
       address: "N/A",
       city: "N/A",
       state: "N/A",
-      postalCode: "N/A",
+      postalCode: "000000",
     },
   });
 
-  await merchant.save();
+  try {
+    await merchant.save();
+  } catch (error) {
+    console.error("Error saving merchant:", error);
+    throw new apiError(500, "Failed to create merchant. Please try again.");
+  }
 
+  // Fetch the created merchant details
   const createdMerchant = await User.findById(newMerchant._id).select(
     "-password -refreshToken"
   );
 
   if (!createdMerchant) {
-    throw new apiError(500, "Failed to create admin. Please try again later.");
+    throw new apiError(
+      500,
+      "Failed to create merchant. Please try again later."
+    );
   }
 
   // Send email notification
@@ -503,7 +513,7 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
 
 // Create a new brand for a merchant
 const createBrand = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params; // Merchant ID
   const { brandName } = req.body;
 
   // Validate inputs
@@ -518,6 +528,14 @@ const createBrand = asyncHandler(async (req, res) => {
   if (!merchant) {
     return res.status(404).json({
       message: "Merchant not found.",
+    });
+  }
+
+  // Check if the merchant already has a brand
+  const existingBrand = await Brand.findOne({ merchant: merchant._id });
+  if (existingBrand) {
+    return res.status(400).json({
+      message: "A brand has already been created for this merchant.",
     });
   }
 
