@@ -5,6 +5,8 @@ import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { sendEmail } from "../helpers/mailer.js";
 import { User } from "../../Models/user.models.js";
+import { Brand } from "../models/brand.models.js";
+import { uploadFileToCloudinary } from "../../utils/cloudinary.js";
 
 // Function to Create Default Super Admin
 const createDefaultSuperAdmin = asyncHandler(async (req, res) => {
@@ -433,6 +435,62 @@ const updateMerchantById = asyncHandler(async (req, res) => {
   });
 });
 
+// Create a new brand for a merchant
+const createBrand = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { brandName, brandLogo } = req.body;
+
+  // Debugging logs
+  console.log("Received ID:", id);
+  console.log("Received brandName:", brandName);
+
+  // Validate inputs
+  if (!id || !brandName) {
+    return res.status(400).json({
+      message: "Merchant ID and brand name are required.",
+    });
+  }
+
+  // Find the merchant
+  const merchant = await Merchant.findById(id);
+  if (!merchant) {
+    return res.status(404).json({
+      message: "Merchant not found.",
+    });
+  }
+
+  // Upload brand logo to Cloudinary (if provided)
+  let uploadedLogoUrl = null;
+  if (brandLogo) {
+    try {
+      const uploadResponse = await uploadFileToCloudinary(brandLogo);
+      uploadedLogoUrl = uploadResponse.secure_url;
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error uploading brand logo.",
+        error: error.message,
+      });
+    }
+  }
+
+  // Create the brand
+  const brand = await Brand.create({
+    name: brandName,
+    logo: uploadedLogoUrl,
+    merchant: merchant,
+  });
+
+  // Link the brand to the merchant
+  if (!merchant.brands) merchant.brands = [];
+  merchant.brands.push(brand._id);
+  await merchant.save();
+
+  return res.status(201).json({
+    message: "Brand created successfully!",
+    brand,
+  });
+});
+
 // get merchant by ID
 const getMerchantAccountById = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -510,4 +568,5 @@ export {
   updateMerchantById,
   getMerchantAccountById,
   getAllMerchantAccounts,
+  createBrand,
 };

@@ -29,6 +29,12 @@ const merchantSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
+    brands: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Brand",
+      },
+    ],
   },
   { timestamps: true }
 );
