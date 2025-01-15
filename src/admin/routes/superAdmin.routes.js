@@ -12,6 +12,7 @@ import {
   getMerchantAccountById,
   getAllMerchantAccounts,
   createBrand,
+  updateBrandById,
 } from "../controllers/superAdmin.controllers.js";
 import { checkRole } from "../middleware/roleMiddleware.js";
 import { upload } from "../../middlewares/multer.middlewares.js";
@@ -93,11 +94,21 @@ router.patch(
 // Create a new brand for a merchant
 router.post(
   "/super-admin/createBrand/:id",
-  upload.single({ name: "logo", maxCount: 1 }),
+  upload.fields([{ name: "logo", maxCount: 1 }]),
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["merchant"]),
   createBrand
+);
+
+// Update a brand by ID
+router.patch(
+  "/super-admin/updateBrand/:id",
+  upload.fields([{ name: "logo", maxCount: 1 }]),
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["merchant"]),
+  updateBrandById
 );
 
 router.get(

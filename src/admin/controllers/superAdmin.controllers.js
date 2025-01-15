@@ -438,11 +438,7 @@ const updateMerchantById = asyncHandler(async (req, res) => {
 // Create a new brand for a merchant
 const createBrand = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { brandName, brandLogo } = req.body;
-
-  // Debugging logs
-  console.log("Received ID:", id);
-  console.log("Received brandName:", brandName);
+  const { brandName } = req.body;
 
   // Validate inputs
   if (!id || !brandName) {
@@ -460,23 +456,22 @@ const createBrand = asyncHandler(async (req, res) => {
   }
 
   // Upload brand logo to Cloudinary (if provided)
-  let uploadedLogoUrl = null;
-  if (brandLogo) {
-    try {
-      const uploadResponse = await uploadFileToCloudinary(brandLogo);
-      uploadedLogoUrl = uploadResponse.secure_url;
-    } catch (error) {
-      return res.status(500).json({
-        message: "Error uploading brand logo.",
-        error: error.message,
-      });
-    }
+  const logoLocalPath = req.files?.logo[0]?.path;
+
+  if (!logoLocalPath) {
+    throw new apiError(400, "Please select a valid image file for your avatar");
+  }
+
+  const logo = await uploadFileToCloudinary(logoLocalPath);
+
+  if (!logo) {
+    throw new apiError(400, "Failed to upload avatar file. Please try again");
   }
 
   // Create the brand
   const brand = await Brand.create({
     name: brandName,
-    logo: uploadedLogoUrl,
+    logo: logo.url,
     merchant: merchant,
   });
 
@@ -489,6 +484,46 @@ const createBrand = asyncHandler(async (req, res) => {
     message: "Brand created successfully!",
     brand,
   });
+});
+
+// Update a brand by ID
+const updateBrandById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { brandData } = req.body;
+
+  // Validate required fields
+  if (!brandData.name) {
+    throw new apiError(400, "Brand name is required.");
+  }
+
+  // Upload brand logo to Cloudinary (if provided)
+  const logoLocalPath = req.files?.logo[0]?.path;
+
+  if (!logoLocalPath) {
+    throw new apiError(400, "Please select a valid image file for your avatar");
+  }
+
+  const logo = await uploadFileToCloudinary(logoLocalPath);
+
+  if (!logo) {
+    throw new apiError(400, "Failed to upload avatar file. Please try again");
+  }
+
+  const updatedBrand = await Brand.findByIdAndUpdate(
+    id,
+    {
+      name: brandData.name,
+      logo: logo.url,
+      merchant: brandData.merchant,
+    },
+    { new: true }
+  );
+  if (!updatedBrand) {
+    throw new apiError(404, "Brand not found");
+  }
+  return res
+    .status(200)
+    .json(new apiResponse(200, updatedBrand, "Brand updated successfully", true));
 });
 
 // get merchant by ID
@@ -569,4 +604,5 @@ export {
   getMerchantAccountById,
   getAllMerchantAccounts,
   createBrand,
+  updateBrandById,
 };
