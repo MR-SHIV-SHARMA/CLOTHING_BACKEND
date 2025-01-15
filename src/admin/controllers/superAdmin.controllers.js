@@ -603,10 +603,22 @@ const updateBrandById = asyncHandler(async (req, res) => {
 // Delete a brand by ID
 const deleteBrandById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const deletedBrand = await Brand.findByIdAndDelete(id);
-  if (!deletedBrand) {
+  const authenticatedMerchantId = req.user.id;
+
+  // Find the brand by ID
+  const brand = await Brand.findById(id);
+  if (!brand) {
     throw new apiError(404, "Brand not found");
   }
+
+  // Check if the authenticated merchant is the owner of the brand
+  if (brand.merchant.toString() !== authenticatedMerchantId) {
+    throw new apiError(403, "You are not authorized to delete this brand");
+  }
+
+  // Delete the brand
+  await Brand.findByIdAndDelete(id);
+
   return res
     .status(200)
     .json(new apiResponse(200, {}, "Brand deleted successfully"));

@@ -32,7 +32,7 @@ router.post(
   "/logout",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   logout
 );
 
@@ -41,7 +41,7 @@ router.post(
   "/reset-password",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   resetPassword
 );
 
