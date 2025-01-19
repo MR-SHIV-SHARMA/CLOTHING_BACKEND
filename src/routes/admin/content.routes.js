@@ -6,11 +6,11 @@ import {
   updateProductById,
   deleteProductById,
   createProduct,
-  getAllProductsbyMerchant
-} from "../controllers/content.controllers.js";
-import { checkRole } from "../middleware/roleMiddleware.js";
-import { adminRateLimiter } from "../middleware/rateLimiter.js";
-import authenticateAdmin from "../middleware/authMiddleware.js";
+  getAllProductsbyMerchant,
+} from "../../controllers/admin/content.controllers.js";
+import { checkRole } from "../../middlewares/roleMiddleware.js";
+import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
+import authenticateAdmin from "../../middlewares/authMiddleware.js";
 import { upload } from "../../middlewares/multer.middlewares.js";
 
 const router = express.Router();

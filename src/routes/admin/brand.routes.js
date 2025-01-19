@@ -2,7 +2,7 @@ import express from "express";
 import {
   getAllBrands,
   getBrandById,
-} from "../controllers/brand.controllers.js";
+} from "../../controllers/admin/brand.controllers.js";
 
 const router = express.Router();
 

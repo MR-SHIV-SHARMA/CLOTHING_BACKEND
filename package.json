@@ -1,5 +1,5 @@
 {
-  "name": "blog_backend",
+  "name": "clothing_backend",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -19,14 +19,15 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "express-session": "^1.18.1",
+    "ignore-by-default": "^2.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.4",
+    "mongoose": "^8.9.5",
     "mongoose-aggregate-paginate-v2": "^1.1.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7",
+    "nodemon": "^3.1.9",
     "prettier": "^3.4.2"
   }
 }

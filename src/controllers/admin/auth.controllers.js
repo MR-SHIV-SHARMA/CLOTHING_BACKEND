@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
-import { ActivityLog } from "../models/activityLog.models.js";
+import { ActivityLog } from "../../Models/adminmodels/activityLog.models.js";
 import { apiError } from "../../utils/apiError.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import crypto from "crypto";
-import { sendEmail } from "../helpers/mailer.js";
+import { sendEmail } from "../../helpers/mailer.js";
 import { User } from "../../Models/user.models.js";
 
 // Generate Access and Refresh Tokens

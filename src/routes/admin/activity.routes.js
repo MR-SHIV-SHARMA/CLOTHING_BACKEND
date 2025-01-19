@@ -1,9 +1,9 @@
 import express from "express";
 import session from "express-session";
-import { getActivityLogs } from "../controllers/activity.controllers.js";
-import { checkRole } from "../middleware/roleMiddleware.js";
-import { adminRateLimiter } from "../middleware/rateLimiter.js";
-import authenticateAdmin from "../middleware/authMiddleware.js";
+import { getActivityLogs } from "../../controllers/admin/activity.controllers.js";
+import { checkRole } from "../../middlewares/roleMiddleware.js";
+import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
+import authenticateAdmin from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

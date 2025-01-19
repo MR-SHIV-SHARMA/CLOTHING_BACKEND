@@ -3,10 +3,10 @@ import session from "express-session";
 import {
   getAllAdmins,
   getAdminById,
-} from "../controllers/admin.controllers.js";
-import { checkRole } from "../middleware/roleMiddleware.js";
-import { adminRateLimiter } from "../middleware/rateLimiter.js";
-import authenticateAdmin from "../middleware/authMiddleware.js";
+} from "../../controllers/admin/admin.controllers.js";
+import { checkRole } from "../../middlewares/roleMiddleware.js";
+import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
+import authenticateAdmin from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

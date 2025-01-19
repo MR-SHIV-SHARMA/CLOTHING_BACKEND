@@ -1,11 +1,11 @@
-import { Merchant } from "../models/merchant.models.js";
-import { ActivityLog } from "../models/activityLog.models.js";
+import { Merchant } from "../../Models/adminmodels/merchant.models.js";
+import { ActivityLog } from "../../Models/adminmodels/activityLog.models.js";
 import { apiError } from "../../utils/apiError.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
-import { sendEmail } from "../helpers/mailer.js";
+import { sendEmail } from "../../helpers/mailer.js";
 import { User } from "../../Models/user.models.js";
-import { Brand } from "../models/brand.models.js";
+import { Brand } from "../../Models/adminmodels/brand.models.js";
 import { uploadFileToCloudinary } from "../../utils/cloudinary.js";
 
 // Function to Create Default Super Admin

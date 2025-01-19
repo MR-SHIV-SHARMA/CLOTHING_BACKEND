@@ -1,4 +1,4 @@
-import { Brand } from "../models/brand.models.js";
+import { Brand } from "../../Models/adminmodels/brand.models.js";
 import { apiError } from "../../utils/apiError.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";

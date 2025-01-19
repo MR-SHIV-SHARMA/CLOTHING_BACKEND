@@ -14,11 +14,11 @@ import {
   createBrand,
   updateBrandById,
   deleteBrandById,
-} from "../controllers/superAdmin.controllers.js";
-import { checkRole } from "../middleware/roleMiddleware.js";
+} from "../../controllers/admin/superAdmin.controllers.js";
+import { checkRole } from "../../middlewares/roleMiddleware.js";
 import { upload } from "../../middlewares/multer.middlewares.js";
-import { adminRateLimiter } from "../middleware/rateLimiter.js";
-import authenticateAdmin from "../middleware/authMiddleware.js";
+import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
+import authenticateAdmin from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

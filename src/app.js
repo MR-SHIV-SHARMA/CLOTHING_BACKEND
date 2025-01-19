@@ -20,13 +20,13 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // admin block
-import authRoutes from "./admin/routes/auth.routes.js";
-import adminRoutes from "./admin/routes/admin.routes.js";
-import contentRoutes from "./admin/routes/content.routes.js";
-import activityRoutes from "./admin/routes/activity.routes.js";
-import superAdminRoutes from "./admin/routes/superAdmin.routes.js";
-import brandRoutes from "./admin/routes/brand.routes.js";
-import categoryRoutes from "./admin/routes/category.routes.js";
+import authRoutes from "./routes/admin/auth.routes.js";
+import adminRoutes from "./routes/admin/admin.routes.js";
+import contentRoutes from "./routes/admin/content.routes.js";
+import activityRoutes from "./routes/admin/activity.routes.js";
+import superAdminRoutes from "./routes/admin/superAdmin.routes.js";
+import brandRoutes from "./routes/admin/brand.routes.js";
+import categoryRoutes from "./routes/admin/category.routes.js";
 
 import userRouter from "./routes/user.routes.js";
 import cartRoutes from "./routes/cart.routes.js";

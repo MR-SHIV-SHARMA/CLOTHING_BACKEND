@@ -1,4 +1,4 @@
-import { ActivityLog } from "../models/activityLog.models.js";
+import { ActivityLog } from "../../Models/adminmodels/activityLog.models.js";
 
 // Get activity logs
 const getActivityLogs = async (req, res) => {
