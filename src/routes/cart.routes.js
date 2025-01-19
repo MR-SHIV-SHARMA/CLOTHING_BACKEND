@@ -1,27 +1,24 @@
 import express from "express";
 import {
-  createOrUpdateCart,
   getCartByUserId,
   addItemToCart,
   removeItemFromCart,
   clearCart,
 } from "../controllers/cart.controllers.js";
+import authenticateAdmin from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Create or update cart for a user
-router.post("/", createOrUpdateCart);
-
 // Get cart by user ID
-router.get("/:userId", getCartByUserId);
+router.get("/:userId", authenticateAdmin, getCartByUserId);
 
 // Add item to cart
-router.post("/add", addItemToCart);
+router.post("/add", authenticateAdmin, addItemToCart);
 
 // Remove item from cart
-router.delete("/remove", removeItemFromCart);
+router.delete("/remove", authenticateAdmin, removeItemFromCart);
 
 // Clear cart
-router.delete("/clear", clearCart);
+router.delete("/clear", authenticateAdmin, clearCart);
 
 export default router;
