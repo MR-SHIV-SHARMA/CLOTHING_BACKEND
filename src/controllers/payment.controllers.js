@@ -8,35 +8,124 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Create a new payment
+// import express from "express";
+import axios from "axios";
+import crypto from "crypto";
+// import { v4 as uuidv4 } from "uuid";
+
+const MERCHANT_BASE_URL =
+  "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
+const MERCHANT_STATUS_URL =
+  "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status";
+const MERCHANT_KEY = "96434309-7796-489d-8924-ab56988a6076";
+const MERCHANT_ID = "PGTESTPAYUAT86";
+
 const createPayment = asyncHandler(async (req, res) => {
-  const { order: orderId, paymentMethod, transactionId } = req.body;
+  const { orderId, paymentMethod, mobileNumber, name,  redirectUrl } =
+    req.body;
 
   // Validate required fields
-  if (!orderId || !paymentMethod) {
-    throw new apiError(400, "Order ID and payment method are required.");
+  if (
+    !orderId ||
+    !paymentMethod ||
+    !mobileNumber ||
+    !name ||
+    !redirectUrl
+  ) {
+    return res.status(400).json({ error: "All fields are required." });
   }
 
   // Fetch order details using the orderId
   const order = await Order.findById(orderId);
   if (!order) {
-    throw new apiError(404, "Order not found.");
+    return res.status(404).json({ error: "Order not found." });
   }
 
-  // The amount is now taken from the order's grandTotal
-  const amount = order.grandTotal;
+  // The amount is taken from the order's grandTotal if not passed
+  const paymentAmount = order.grandTotal;
 
-  // Create the payment
-  const payment = await Payment.create({
-    order: orderId,
-    paymentMethod,
-    amount,
-    transactionId,
-  });
+  // Payment Payload for PhonePe
+  const paymentPayload = {
+    merchantId: MERCHANT_ID,
+    merchantUserId: name,
+    mobileNumber: mobileNumber,
+    amount: paymentAmount * 100, // converting amount to paise
+    merchantTransactionId: orderId,
+    redirectUrl: `${redirectUrl}/?id=${orderId}`,
+    redirectMode: "POST",
+    paymentInstrument: {
+      type: "PAY_PAGE",
+    },
+  };
 
-  return res
-    .status(201)
-    .json(new apiResponse(201, payment, "Payment created successfully."));
+  const payload = Buffer.from(JSON.stringify(paymentPayload)).toString(
+    "base64"
+  );
+  const keyIndex = 1;
+  const string = payload + "/pg/v1/pay" + MERCHANT_KEY;
+  const sha256 = crypto.createHash("sha256").update(string).digest("hex");
+  const checksum = sha256 + "###" + keyIndex;
+
+  const options = {
+    method: "POST",
+    url: MERCHANT_BASE_URL,
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      "X-VERIFY": checksum,
+    },
+    data: {
+      request: payload,
+    },
+  };
+
+  try {
+    // Initiate payment request
+    const response = await axios.request(options);
+    const redirectUrl = response.data.data.instrumentResponse.redirectInfo.url;
+    return res.status(200).json({
+      msg: "Payment initiated successfully",
+      url: redirectUrl,
+    });
+  } catch (error) {
+    console.error("Error in payment initiation:", error);
+    return res.status(500).json({ error: "Failed to initiate payment" });
+  }
 });
+
+// Status callback endpoint
+const paymentStatus = async (req, res) => {
+  const merchantTransactionId = req.query.id;
+
+  const keyIndex = 1;
+  const string =
+    `/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}` + MERCHANT_KEY;
+  const sha256 = crypto.createHash("sha256").update(string).digest("hex");
+  const checksum = sha256 + "###" + keyIndex;
+
+  const options = {
+    method: "GET",
+    url: `${MERCHANT_STATUS_URL}/${MERCHANT_ID}/${merchantTransactionId}`,
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      "X-VERIFY": checksum,
+      "X-MERCHANT-ID": MERCHANT_ID,
+    },
+  };
+
+  try {
+    const response = await axios.request(options);
+    if (response.data.success === true) {
+      return res.redirect(successUrl);
+    } else {
+      return res.redirect(failureUrl);
+    }
+  } catch (error) {
+    console.error("Error in payment status check:", error);
+    return res.status(500).json({ error: "Failed to verify payment status" });
+  }
+};
 
 // Get all payments
 const getAllPayments = asyncHandler(async (req, res) => {
@@ -220,6 +309,7 @@ const getUserOrders = asyncHandler(async (req, res) => {
 
 export {
   createPayment,
+  paymentStatus,
   getAllPayments,
   getPaymentById,
   updatePaymentById,

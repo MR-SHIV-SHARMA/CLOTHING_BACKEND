@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createPayment,
+  paymentStatus,
   getAllPayments,
   getPaymentById,
   updatePaymentById,
@@ -17,6 +18,9 @@ const router = express.Router();
 
 // Create a new payment
 router.post("/", authenticateAdmin, createPayment);
+
+// Status callback endpoint
+router.get("/status", authenticateAdmin, paymentStatus);
 
 // Get all payments
 router.get("/", authenticateAdmin, getAllPayments);
