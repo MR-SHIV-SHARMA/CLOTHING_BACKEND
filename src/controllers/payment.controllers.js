@@ -21,17 +21,10 @@ const MERCHANT_KEY = "96434309-7796-489d-8924-ab56988a6076";
 const MERCHANT_ID = "PGTESTPAYUAT86";
 
 const createPayment = asyncHandler(async (req, res) => {
-  const { orderId, paymentMethod, mobileNumber, name,  redirectUrl } =
-    req.body;
+  const { orderId, paymentMethod, mobileNumber, name, redirectUrl } = req.body;
 
   // Validate required fields
-  if (
-    !orderId ||
-    !paymentMethod ||
-    !mobileNumber ||
-    !name ||
-    !redirectUrl
-  ) {
+  if (!orderId || !paymentMethod || !mobileNumber || !name || !redirectUrl) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
@@ -52,7 +45,7 @@ const createPayment = asyncHandler(async (req, res) => {
     amount: paymentAmount * 100, // converting amount to paise
     merchantTransactionId: orderId,
     redirectUrl: `${redirectUrl}/?id=${orderId}`,
-    redirectMode: "POST",
+    redirectMode: "GET",
     paymentInstrument: {
       type: "PAY_PAGE",
     },
@@ -94,8 +87,13 @@ const createPayment = asyncHandler(async (req, res) => {
 });
 
 // Status callback endpoint
-const paymentStatus = async (req, res) => {
+const paymentStatus = asyncHandler(async (req, res) => {
   const merchantTransactionId = req.query.id;
+
+  // Validate the transaction ID
+  if (!merchantTransactionId) {
+    return res.status(400).json({ error: "Transaction ID is required." });
+  }
 
   const keyIndex = 1;
   const string =
@@ -116,16 +114,51 @@ const paymentStatus = async (req, res) => {
 
   try {
     const response = await axios.request(options);
-    if (response.data.success === true) {
-      return res.redirect(successUrl);
+    const phonePeResponse = response.data;
+
+    if (phonePeResponse.success === true) {
+      // Update Payment Status in Database
+      const payment = await Payment.findOne({
+        transactionId: merchantTransactionId,
+      });
+      if (payment) {
+        payment.paymentStatus = "success";
+        await payment.save();
+
+        // Update Order Status (if necessary)
+        const order = await Order.findById(payment.order);
+        if (order) {
+          order.orderStatus = "Paid";
+          await order.save();
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Payment verified successfully.",
+        paymentStatus: "success",
+      });
     } else {
-      return res.redirect(failureUrl);
+      // Payment Failed
+      const payment = await Payment.findOne({
+        transactionId: merchantTransactionId,
+      });
+      if (payment) {
+        payment.paymentStatus = "failed";
+        await payment.save();
+      }
+
+      return res.status(200).json({
+        success: false,
+        message: "Payment verification failed.",
+        paymentStatus: "failed",
+      });
     }
   } catch (error) {
     console.error("Error in payment status check:", error);
-    return res.status(500).json({ error: "Failed to verify payment status" });
+    return res.status(500).json({ error: "Failed to verify payment status." });
   }
-};
+});
 
 // Get all payments
 const getAllPayments = asyncHandler(async (req, res) => {
