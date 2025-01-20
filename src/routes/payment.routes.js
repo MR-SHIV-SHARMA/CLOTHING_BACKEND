@@ -6,38 +6,51 @@ import {
   updatePaymentById,
   deletePaymentById,
   updateOrderPaymentStatus,
+  updatePaymentStatus,
   createShipping,
   getOrderStatus,
   getUserOrders,
 } from "../controllers/payment.controllers.js";
+import authenticateAdmin from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // Create a new payment
-router.post("/", createPayment);
+router.post("/", authenticateAdmin, createPayment);
 
 // Get all payments
-router.get("/", getAllPayments);
+router.get("/", authenticateAdmin, getAllPayments);
 
 // Get a payment by ID
-router.get("/:id", getPaymentById);
+router.get("/:id", authenticateAdmin, getPaymentById);
 
 // Update a payment by ID
-router.put("/:id", updatePaymentById);
+router.put("/:id", authenticateAdmin, updatePaymentById);
 
 // Delete a payment by ID
-router.delete("/:id", deletePaymentById);
+router.delete("/:id", authenticateAdmin, deletePaymentById);
 
-// Update the payment status of an order
-router.put("/update-payment-status", updateOrderPaymentStatus);
+// Update the payment status of an order in order to confirm payment
+router.put(
+  "/update-payment-status",
+  authenticateAdmin,
+  updateOrderPaymentStatus
+);
+
+// Update the payment status of an order in payment to confirm payment
+router.put(
+  "/update-payment-status-payment",
+  authenticateAdmin,
+  updatePaymentStatus
+);
 
 // Create shipping details
-router.post("/shipping", createShipping);
+router.post("/shipping", authenticateAdmin, createShipping);
 
 // Track order status
-router.get("/order-status/:orderId", getOrderStatus);
+router.get("/order-status/:orderId", authenticateAdmin, getOrderStatus);
 
 // Get all orders by a user
-router.get("/user-orders", getUserOrders);
+router.get("/user-orders", authenticateAdmin, getUserOrders);
 
 export default router;

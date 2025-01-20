@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Payment } from "../models/payment.models.js";
 import { Order } from "../Models/order.models.js";
 import { Product } from "../Models/adminmodels/product.models.js";
@@ -7,16 +8,25 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Create a new payment
 const createPayment = asyncHandler(async (req, res) => {
-  const { order, paymentMethod, amount, transactionId } = req.body;
+  const { order: orderId, paymentMethod, transactionId } = req.body;
 
   // Validate required fields
-  if (!order || !paymentMethod || !amount) {
-    throw new apiError(400, "Order, payment method, and amount are required.");
+  if (!orderId || !paymentMethod) {
+    throw new apiError(400, "Order ID and payment method are required.");
   }
+
+  // Fetch order details using the orderId
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new apiError(404, "Order not found.");
+  }
+
+  // The amount is now taken from the order's grandTotal
+  const amount = order.grandTotal;
 
   // Create the payment
   const payment = await Payment.create({
-    order,
+    order: orderId,
     paymentMethod,
     amount,
     transactionId,
@@ -84,15 +94,63 @@ const deletePaymentById = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "Payment deleted successfully."));
 });
 
-// Payment Processing complete after work
+const updatePaymentStatus = asyncHandler(async (req, res) => {
+  const { paymentId, paymentStatus } = req.body;
+
+  console.log("Received request to update payment status:");
+  console.log("Payment ID:", paymentId);
+  console.log("Payment Status:", paymentStatus);
+
+  // Ensure paymentId is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+    console.log("Invalid Payment ID:", paymentId);
+    throw new apiError(400, "Invalid Payment ID");
+  }
+
+  console.log("Payment ID is valid. Fetching payment from the database...");
+
+  // Fetch the payment using the Payment ID
+  const payment = await Payment.findById(paymentId);
+
+  if (!payment) {
+    console.log("Payment not found for ID:", paymentId);
+    throw new apiError(404, "Payment not found");
+  }
+
+  console.log("Payment found:", payment);
+
+  // Update the payment status
+  console.log("Updating payment status...");
+  payment.paymentStatus = paymentStatus;
+
+  // Save the updated payment status
+  await payment.save();
+
+  console.log("Payment status updated successfully:", payment);
+
+  res.status(200).json({
+    success: true,
+    message: "Payment status updated successfully",
+    payment,
+  });
+});
+
 const updateOrderPaymentStatus = asyncHandler(async (req, res) => {
   const { orderId, paymentStatus } = req.body;
+
+  // Ensure orderId is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    throw new apiError(400, "Invalid Order ID");
+  }
+
+  // Fetch the order using the ObjectId
   const order = await Order.findById(orderId);
   if (!order) {
     throw new apiError(404, "Order not found");
   }
 
-  order.paymentStatus = paymentStatus; // Update status to 'paid'
+  // Update the payment status to the provided status
+  order.paymentStatus = paymentStatus;
   await order.save();
 
   // Now, call updateProductStock after order payment status is updated
@@ -105,7 +163,7 @@ const updateOrderPaymentStatus = asyncHandler(async (req, res) => {
   });
 });
 
-// Call this function after payment is successfully processed.
+// Function to update product stock
 const updateProductStock = async (orderItems) => {
   for (const item of orderItems) {
     const product = await Product.findById(item.product);
@@ -164,6 +222,7 @@ export {
   updatePaymentById,
   deletePaymentById,
   updateOrderPaymentStatus,
+  updatePaymentStatus,
   createShipping,
   getOrderStatus,
   getUserOrders,
