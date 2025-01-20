@@ -21,7 +21,12 @@ const cartSchema = new mongoose.Schema(
     },
     appliedCoupon: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
     tax: { type: Number, default: 0 },
-    shippingCharges: { type: Number, default: 0 },
+    shippingDetails: [
+      {
+        vendor: { type: mongoose.Schema.Types.ObjectId, ref: "Merchant" },
+        shippingCharge: { type: Number, required: true },
+      },
+    ],
     discount: { type: Number, default: 0 },
     expiresAt: { type: Date, default: Date.now, index: { expires: "7d" } },
   },
@@ -30,13 +35,15 @@ const cartSchema = new mongoose.Schema(
 
 // Pre-save hook for totalPrice calculation
 cartSchema.pre("save", async function (next) {
-  this.totalPrice = await this.items.reduce(async (total, item) => {
+  const total = await this.items.reduce(async (acc, item) => {
     const product = await mongoose.model("Product").findById(item.product);
     if (product) {
-      return total + product.price * item.quantity;
+      return (await acc) + product.price * item.quantity;
     }
-    return total;
-  }, 0);
+    return acc;
+  }, Promise.resolve(0));
+
+  this.totalPrice = total;
   next();
 });
 

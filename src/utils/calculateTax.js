@@ -21,4 +21,27 @@ const calculateTax = (items) => {
   }, 0);
 };
 
-export { calculateTax };
+const calculateShippingCharges = (items) => {
+  const vendorCharges = {};
+
+  items.forEach((item) => {
+    const vendorId = item.product.merchant;
+
+    // Base charge for the vendor
+    if (!vendorCharges[vendorId]) {
+      vendorCharges[vendorId] = 50; // Example base charge per vendor
+    }
+
+    // Add additional charges based on quantity
+    const additionalChargePerItem = 10; // Example rate
+    vendorCharges[vendorId] += item.quantity * additionalChargePerItem;
+  });
+
+  // Sum up all vendor charges
+  return Object.values(vendorCharges).reduce(
+    (total, charge) => total + charge,
+    0
+  );
+};
+
+export { calculateTax, calculateShippingCharges };

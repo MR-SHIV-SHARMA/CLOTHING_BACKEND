@@ -3,7 +3,27 @@ import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../Models/user.models.js";
-import { calculateTax } from "../utils/calculateTax.js";
+import {
+  calculateTax,
+  calculateShippingCharges,
+} from "../utils/calculateTax.js";
+
+const calculateCart = (cart) => {
+  const totalPrice = cart.items.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0
+  );
+
+  const tax = calculateTax(cart.items);
+  const shippingCharges = calculateShippingCharges(cart.items);
+
+  // Apply discount (if any)
+  const discount = cart.discount || 0;
+
+  const grandTotal = totalPrice + tax + shippingCharges - discount;
+
+  return { totalPrice, tax, shippingCharges, discount, grandTotal };
+};
 
 // Get cart by user ID
 const getCartByUserId = asyncHandler(async (req, res) => {
@@ -16,9 +36,17 @@ const getCartByUserId = asyncHandler(async (req, res) => {
     throw new apiError(404, "Cart not found");
   }
 
+  const calculatedCart = calculateCart(cart);
+
   return res
     .status(200)
-    .json(new apiResponse(200, cart, "Cart fetched successfully"));
+    .json(
+      new apiResponse(
+        200,
+        { ...cart.toObject(), ...calculatedCart },
+        "Cart fetched successfully"
+      )
+    );
 });
 
 // Add item to cart
@@ -43,11 +71,11 @@ const addItemToCart = asyncHandler(async (req, res) => {
       items: [{ product: productId, quantity }],
       appliedCoupon,
       tax: 0,
-      shippingCharges: 50,
       discount: 0,
     });
     await cart.populate("items.product");
     cart.tax = calculateTax(cart.items);
+    cart.shippingCharges = calculateShippingCharges(cart.items);
     await cart.save();
     return res
       .status(201)
@@ -72,7 +100,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
   }
 
   cart.tax = calculateTax(cart.items);
-  cart.shippingCharges = 50; // Example fixed shipping charge
+  cart.shippingCharges = calculateShippingCharges(cart.items);
 
   await cart.save();
   return res
@@ -105,6 +133,7 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
 
   cart.tax = calculateTax(cart.items);
   cart.discount = cart.items.length === 0 ? 0 : cart.discount;
+  cart.shippingCharges = calculateShippingCharges(cart.items);
 
   await cart.save();
   return res
