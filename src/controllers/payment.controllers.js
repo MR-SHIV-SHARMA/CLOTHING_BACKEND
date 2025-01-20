@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Payment } from "../models/payment.models.js";
 import { Order } from "../Models/order.models.js";
 import { Product } from "../Models/adminmodels/product.models.js";
+import { Shipping } from "../Models/shipping.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -94,6 +95,7 @@ const deletePaymentById = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "Payment deleted successfully."));
 });
 
+// Update the payment status of a payment (not order) to confirm payment
 const updatePaymentStatus = asyncHandler(async (req, res) => {
   const { paymentId, paymentStatus } = req.body;
 
@@ -135,6 +137,7 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
   });
 });
 
+// Update the payment status of an order to confirm payment
 const updateOrderPaymentStatus = asyncHandler(async (req, res) => {
   const { orderId, paymentStatus } = req.body;
 

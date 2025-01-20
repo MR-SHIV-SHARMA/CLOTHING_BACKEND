@@ -30,19 +30,15 @@ router.put("/:id", authenticateAdmin, updatePaymentById);
 // Delete a payment by ID
 router.delete("/:id", authenticateAdmin, deletePaymentById);
 
-// Update the payment status of an order in order to confirm payment
+// Update the payment status of an order to confirm payment
 router.put(
-  "/update-payment-status",
+  "/order/payment-status",
   authenticateAdmin,
   updateOrderPaymentStatus
 );
 
-// Update the payment status of an order in payment to confirm payment
-router.put(
-  "/update-payment-status-payment",
-  authenticateAdmin,
-  updatePaymentStatus
-);
+// Update the payment status of a payment (not order) to confirm payment
+router.put("/payment/status", authenticateAdmin, updatePaymentStatus);
 
 // Create shipping details
 router.post("/shipping", authenticateAdmin, createShipping);
@@ -51,6 +47,6 @@ router.post("/shipping", authenticateAdmin, createShipping);
 router.get("/order-status/:orderId", authenticateAdmin, getOrderStatus);
 
 // Get all orders by a user
-router.get("/user-orders", authenticateAdmin, getUserOrders);
+router.get("/user/orders", authenticateAdmin, getUserOrders);
 
 export default router;
