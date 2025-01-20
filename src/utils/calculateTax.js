@@ -6,10 +6,13 @@ const calculateTax = (items) => {
     }
 
     const productPrice = item.product.price;
-    const itemTotal = item.quantity * productPrice;
+    const discount =
+      (productPrice * (item.product.discount?.percentage || 0)) / 100;
+    const discountedPrice = productPrice - discount;
+    const itemTotal = item.quantity * discountedPrice;
 
     console.log(
-      `Item: ${item.product.name}, Price: ${productPrice}, Quantity: ${item.quantity}, Total: ${itemTotal}`
+      `Item: ${item.product.name}, Price: ${productPrice}, Discounted Price: ${discountedPrice}, Quantity: ${item.quantity}, Total: ${itemTotal}`
     );
 
     let taxRate = 0.05;
@@ -21,27 +24,41 @@ const calculateTax = (items) => {
   }, 0);
 };
 
-const calculateShippingCharges = (items) => {
-  const vendorCharges = {};
+const calculateShippingDetails = (items) => {
+  const shippingDetails = {};
 
   items.forEach((item) => {
-    const vendorId = item.product.merchant;
+    const vendorId = item.product.merchant.toString();
 
-    // Base charge for the vendor
-    if (!vendorCharges[vendorId]) {
-      vendorCharges[vendorId] = 50; // Example base charge per vendor
+    if (!shippingDetails[vendorId]) {
+      shippingDetails[vendorId] = {
+        vendor: item.product.merchant,
+        shippingCharge: 50, // Base charge
+      };
     }
 
-    // Add additional charges based on quantity
     const additionalChargePerItem = 10; // Example rate
-    vendorCharges[vendorId] += item.quantity * additionalChargePerItem;
+    shippingDetails[vendorId].shippingCharge +=
+      item.quantity * additionalChargePerItem;
   });
 
-  // Sum up all vendor charges
-  return Object.values(vendorCharges).reduce(
-    (total, charge) => total + charge,
-    0
-  );
+  return Object.values(shippingDetails);
 };
 
-export { calculateTax, calculateShippingCharges };
+const calculateDiscount = (items) => {
+  return items.reduce((total, item) => {
+    if (
+      !item.product ||
+      !item.product.price ||
+      !item.product.discount?.percentage
+    ) {
+      return total; // Skip items without discount details
+    }
+
+    const productPrice = item.product.price;
+    const discount = (productPrice * item.product.discount.percentage) / 100;
+    return total + discount * item.quantity;
+  }, 0);
+};
+
+export { calculateTax, calculateShippingDetails, calculateDiscount };

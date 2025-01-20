@@ -35,15 +35,16 @@ const cartSchema = new mongoose.Schema(
 
 // Pre-save hook for totalPrice calculation
 cartSchema.pre("save", async function (next) {
-  const total = await this.items.reduce(async (acc, item) => {
+  this.totalPrice = await this.items.reduce(async (total, item) => {
     const product = await mongoose.model("Product").findById(item.product);
     if (product) {
-      return (await acc) + product.price * item.quantity;
+      const discountedPrice =
+        product.price -
+        (product.price * (product.discount?.percentage || 0)) / 100;
+      return total + discountedPrice * item.quantity;
     }
-    return acc;
-  }, Promise.resolve(0));
-
-  this.totalPrice = total;
+    return total;
+  }, 0);
   next();
 });
 
