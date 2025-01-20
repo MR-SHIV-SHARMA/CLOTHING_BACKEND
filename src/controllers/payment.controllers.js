@@ -95,6 +95,9 @@ const updateOrderPaymentStatus = asyncHandler(async (req, res) => {
   order.paymentStatus = paymentStatus; // Update status to 'paid'
   await order.save();
 
+  // Now, call updateProductStock after order payment status is updated
+  await updateProductStock(order.items); // Ensure the stock is updated after payment
+
   res.status(200).json({
     success: true,
     message: "Payment status updated successfully",
@@ -113,11 +116,7 @@ const updateProductStock = async (orderItems) => {
   }
 };
 
-// Call this function after order is successfully placed.
-updateProductStock(order.items);
-
-// Call this function after payment is successfully processed.
-// Create Shipping Details
+// Create Shipping Details after payment
 const createShipping = asyncHandler(async (req, res) => {
   const { orderId, trackingNumber, carrier } = req.body;
 
@@ -164,4 +163,8 @@ export {
   getPaymentById,
   updatePaymentById,
   deletePaymentById,
+  updateOrderPaymentStatus,
+  createShipping,
+  getOrderStatus,
+  getUserOrders,
 };
