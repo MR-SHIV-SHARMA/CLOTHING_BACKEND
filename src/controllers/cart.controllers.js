@@ -1,16 +1,21 @@
-import { Cart } from "../models/cart.models.js";
+import { Cart } from "../Models/cart.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../Models/user.models.js";
+import { calculateTax } from "../utils/calculateTax.js";
 
 // Get cart by user ID
 const getCartByUserId = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  const cart = await Cart.findOne({ user: userId }).populate("items.product");
+  const cart = await Cart.findOne({ user: userId })
+    .populate("items.product")
+    .populate("appliedCoupon");
+
   if (!cart) {
     throw new apiError(404, "Cart not found");
   }
+
   return res
     .status(200)
     .json(new apiResponse(200, cart, "Cart fetched successfully"));
@@ -18,44 +23,56 @@ const getCartByUserId = asyncHandler(async (req, res) => {
 
 // Add item to cart
 const addItemToCart = asyncHandler(async (req, res) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity, appliedCoupon } = req.body;
 
-  // Validate required fields
   if (!productId || !quantity) {
-    throw new apiError(400, "Product ID, and Quantity are required.");
+    throw new apiError(400, "Product ID and Quantity are required.");
   }
 
-  let userId = await User.findById(req.admin._id);
-  if (!userId) {
+  let userId = req.admin._id;
+  const user = await User.findById(userId);
+  if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
-  console.log(userId + "user");
 
-  let cart = await Cart.findOne({ user: userId });
+  let cart = await Cart.findOne({ user: userId }).populate("items.product");
 
   if (!cart) {
-    // Create a new cart if it doesn't exist
     cart = await Cart.create({
       user: userId,
       items: [{ product: productId, quantity }],
+      appliedCoupon,
+      tax: 0,
+      shippingCharges: 50,
+      discount: 0,
     });
+    await cart.populate("items.product");
+    cart.tax = calculateTax(cart.items);
+    await cart.save();
     return res
       .status(201)
       .json(new apiResponse(201, cart, "Item added to cart successfully"));
   }
 
-  // Check if the item already exists in the cart
   const itemIndex = cart.items.findIndex(
-    (item) => item.product.toString() === productId
+    (item) => item.product._id.toString() === productId
   );
 
   if (itemIndex > -1) {
-    // Update existing item quantity
     cart.items[itemIndex].quantity += quantity;
   } else {
-    // Add new item to cart
     cart.items.push({ product: productId, quantity });
   }
+
+  await cart.populate("items.product");
+
+  if (appliedCoupon) {
+    cart.appliedCoupon = appliedCoupon;
+    cart.discount = 20; // Example coupon logic, update accordingly
+  }
+
+  cart.tax = calculateTax(cart.items);
+  cart.shippingCharges = 50; // Example fixed shipping charge
 
   await cart.save();
   return res
@@ -67,13 +84,13 @@ const addItemToCart = asyncHandler(async (req, res) => {
 const removeItemFromCart = asyncHandler(async (req, res) => {
   const { productId } = req.body;
 
-  // Validate required fields
   if (!productId) {
-    throw new apiError(400, "User ID and Product ID are required.");
+    throw new apiError(400, "Product ID is required.");
   }
 
-  let userId = await User.findById(req.admin._id);
-  if (!userId) {
+  let userId = req.admin._id;
+  const user = await User.findById(userId);
+  if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
 
@@ -82,12 +99,14 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
     throw new apiError(404, "Cart not found");
   }
 
-  // Filter out the item to be removed
   cart.items = cart.items.filter(
     (item) => item.product.toString() !== productId
   );
-  await cart.save();
 
+  cart.tax = calculateTax(cart.items);
+  cart.discount = cart.items.length === 0 ? 0 : cart.discount;
+
+  await cart.save();
   return res
     .status(200)
     .json(new apiResponse(200, cart, "Item removed from cart successfully"));
@@ -95,9 +114,9 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
 
 // Clear cart for a user
 const clearCart = asyncHandler(async (req, res) => {
-  // Validate required fields
-  let userId = await User.findById(req.admin._id);
-  if (!userId) {
+  let userId = req.admin._id;
+  const user = await User.findById(userId);
+  if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
 
