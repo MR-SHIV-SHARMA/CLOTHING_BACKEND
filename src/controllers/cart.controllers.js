@@ -9,6 +9,16 @@ import {
   calculateDiscount,
 } from "../utils/calculateTax.js";
 
+// Error handling for invalid or missing product
+const validateProductInCart = (cart, productId) => {
+  const itemIndex = cart.items.findIndex(
+    (item) => item.product._id.toString() === productId
+  );
+  if (itemIndex === -1) {
+    throw new apiError(404, "Product not found in cart");
+  }
+};
+
 const calculateCart = (cart) => {
   const totalPrice = cart.items.reduce((total, item) => {
     const discount =
@@ -41,6 +51,13 @@ const calculateCart = (cart) => {
     discount,
     grandTotal: roundedGrandTotal,
   };
+};
+
+// Custom Error Handling for Invalid Cart State
+const handleCartError = (cart) => {
+  if (!cart || cart.items.length === 0) {
+    throw new apiError(400, "Your cart is empty.");
+  }
 };
 
 // Get cart by user ID
