@@ -175,4 +175,100 @@ const clearCart = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "Cart cleared successfully"));
 });
 
-export { getCartByUserId, addItemToCart, removeItemFromCart, clearCart };
+// Increase item quantity
+const increaseQuantity = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+
+  if (!productId) {
+    throw new apiError(400, "Product ID is required.");
+  }
+
+  let userId = req.admin._id;
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  const cart = await Cart.findOne({ user: userId }).populate("items.product");
+  if (!cart) {
+    throw new apiError(404, "Cart not found");
+  }
+
+  const itemIndex = cart.items.findIndex(
+    (item) => item.product._id.toString() === productId
+  );
+
+  if (itemIndex > -1) {
+    // Increase the quantity of the existing item
+    cart.items[itemIndex].quantity += 1;
+  } else {
+    // Add new item if not found
+    cart.items.push({ product: productId, quantity: 1 });
+  }
+
+  // Recalculate the cart details after the update
+  cart.tax = calculateTax(cart.items);
+  cart.shippingDetails = calculateShippingDetails(cart.items);
+  cart.discount = calculateDiscount(cart.items);
+
+  await cart.save(); // Save the updated cart
+  return res
+    .status(200)
+    .json(new apiResponse(200, cart, "Quantity increased successfully"));
+});
+
+// Decrease item quantity
+const decreaseQuantity = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+
+  if (!productId) {
+    throw new apiError(400, "Product ID is required.");
+  }
+
+  let userId = req.admin._id;
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  const cart = await Cart.findOne({ user: userId }).populate("items.product");
+  if (!cart) {
+    throw new apiError(404, "Cart not found");
+  }
+
+  const itemIndex = cart.items.findIndex(
+    (item) => item.product._id.toString() === productId
+  );
+
+  if (itemIndex > -1) {
+    // Decrease quantity but ensure it doesn't go below 1
+    if (cart.items[itemIndex].quantity > 1) {
+      cart.items[itemIndex].quantity -= 1;
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Quantity cannot be less than 1." });
+    }
+  } else {
+    return res.status(404).json({ message: "Item not found in cart." });
+  }
+
+  // Recalculate the cart details after the update
+  cart.tax = calculateTax(cart.items);
+  cart.shippingDetails = calculateShippingDetails(cart.items);
+  cart.discount = calculateDiscount(cart.items);
+
+  await cart.save(); // Save the updated cart
+  return res
+    .status(200)
+    .json(new apiResponse(200, cart, "Quantity decreased successfully"));
+});
+
+export {
+  getCartByUserId,
+  addItemToCart,
+  removeItemFromCart,
+  clearCart,
+  increaseQuantity,
+  decreaseQuantity,
+};

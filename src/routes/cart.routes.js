@@ -4,6 +4,8 @@ import {
   addItemToCart,
   removeItemFromCart,
   clearCart,
+  increaseQuantity,
+  decreaseQuantity,
 } from "../controllers/cart.controllers.js";
 import authenticateAdmin from "../middlewares/authMiddleware.js";
 
@@ -20,5 +22,11 @@ router.delete("/remove", authenticateAdmin, removeItemFromCart);
 
 // Clear cart
 router.delete("/clear", authenticateAdmin, clearCart);
+
+// Increase item quantity
+router.put("/increase", authenticateAdmin, increaseQuantity);
+
+// Decrease item quantity
+router.put("/decrease", authenticateAdmin, decreaseQuantity);
 
 export default router;

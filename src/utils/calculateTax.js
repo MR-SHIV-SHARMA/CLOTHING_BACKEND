@@ -28,7 +28,7 @@ const calculateShippingDetails = (items) => {
   const shippingDetails = {};
 
   items.forEach((item) => {
-    const vendorId = item.product.merchant.toString();
+    const vendorId = item.product.merchantc;
 
     if (!shippingDetails[vendorId]) {
       shippingDetails[vendorId] = {
@@ -56,8 +56,23 @@ const calculateDiscount = (items) => {
     }
 
     const productPrice = item.product.price;
-    const discount = (productPrice * item.product.discount.percentage) / 100;
-    return total + discount * item.quantity;
+    const discount = item.product.discount;
+
+    // Get the current date
+    const currentDate = new Date();
+
+    // Check if the discount is valid (current date is within the discount's date range)
+    const isDiscountValid =
+      currentDate >= new Date(discount.startDate) &&
+      currentDate <= new Date(discount.endDate);
+
+    if (isDiscountValid) {
+      // Apply discount only if valid
+      const discountAmount = (productPrice * discount.percentage) / 100;
+      return total + discountAmount * item.quantity;
+    }
+
+    return total; // Return total without applying discount if invalid
   }, 0);
 };
 
