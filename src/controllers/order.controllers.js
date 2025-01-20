@@ -1,31 +1,52 @@
-import { Order } from "../models/order.models.js";
+import { Order } from "../Models/order.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Address } from "../Models/address.models.js";
+import { Cart } from "../Models/cart.models.js";
 
 // Create a new order
 const createOrder = asyncHandler(async (req, res) => {
-  const { user, items, totalAmount, shippingAddress } = req.body;
+  const user = req.user._id;
+  const { addressId } = req.body;
 
-  // Validate required fields
-  if (!user || !items || !totalAmount || !shippingAddress) {
-    throw new apiError(
-      400,
-      "User, items, total amount, and shipping address are required."
-    );
+  // Validate address
+  const address = await Address.findOne({ _id: addressId, user });
+  if (!address) {
+    throw new apiError(400, "Invalid address");
   }
 
-  // Create the order
+  // Get the user's cart
+  const cart = await Cart.findOne({ user }).populate("items.product");
+  if (!cart || cart.items.length === 0) {
+    throw new apiError(400, "Cart is empty");
+  }
+
+  // Calculate totals
+  const totalPrice = cart.totalPrice;
+  const grandTotal = totalPrice + cart.tax - cart.discount;
+
+  // Create order
   const order = await Order.create({
     user,
-    items,
-    totalAmount,
-    shippingAddress,
+    items: cart.items.map((item) => ({
+      product: item.product._id,
+      quantity: item.quantity,
+      price: item.product.price,
+    })),
+    totalPrice,
+    tax: cart.tax,
+    discount: cart.discount,
+    grandTotal,
+    shippingAddress: address._id,
   });
 
-  return res
+  // Clear cart after order creation
+  await Cart.findOneAndUpdate({ user }, { items: [] });
+
+  res
     .status(201)
-    .json(new apiResponse(201, order, "Order created successfully."));
+    .json({ success: true, message: "Order created successfully", order });
 });
 
 // Get all orders

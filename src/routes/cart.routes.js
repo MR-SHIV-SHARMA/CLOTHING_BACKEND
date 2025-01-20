@@ -6,8 +6,8 @@ import {
   clearCart,
   increaseQuantity,
   decreaseQuantity,
+  checkout,
 } from "../controllers/cart.controllers.js";
-import { checkout } from "../controllers/checkout.controllers.js";
 import authenticateAdmin from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -30,6 +30,6 @@ router.put("/increase", authenticateAdmin, increaseQuantity);
 // Decrease item quantity
 router.put("/decrease", authenticateAdmin, decreaseQuantity);
 
-router.post("/checkout/:userId", checkout);
+router.post("/checkout/:userId", authenticateAdmin, checkout);
 
 export default router;
