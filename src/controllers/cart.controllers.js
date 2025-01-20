@@ -27,7 +27,11 @@ const calculateCart = (cart) => {
   // Calculate total discount
   const discount = calculateDiscount(cart.items);
 
+  // Calculate grand total
   const grandTotal = totalPrice + tax + shippingCharges - discount;
+
+  // Round the grand total to the nearest integer or specify the number of decimal places you want
+  const roundedGrandTotal = Math.round(grandTotal);
 
   return {
     totalPrice,
@@ -35,7 +39,7 @@ const calculateCart = (cart) => {
     shippingDetails,
     shippingCharges,
     discount,
-    grandTotal,
+    grandTotal: roundedGrandTotal,
   };
 };
 
