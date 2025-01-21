@@ -11,32 +11,40 @@ import {
 } from "../utils/calculateTax.js";
 
 const calculateCart = (cart) => {
-  // Calculate total price
-  const totalPrice = cart.items.reduce((total, item) => {
-    const price = parseFloat(item.product.price) || 0; // Access price from item.product
-    const quantity = parseInt(item.quantity, 10) || 0; // Access quantity directly from item
-    return total + price * quantity;
+  const totalPrice = cart.items.reduce((sum, item) => {
+    const productPrice = item.product.price;
+    const discount =
+      item.product.discount &&
+      new Date() >= new Date(item.product.discount.startDate) &&
+      new Date() <= new Date(item.product.discount.endDate)
+        ? (productPrice * item.product.discount.percentage) / 100
+        : 0;
+    const finalPrice = productPrice - discount;
+    return sum + finalPrice * item.quantity;
   }, 0);
 
-  // Calculate other cart details
-  const tax = calculateTax(cart.items);
-  const shippingDetails = calculateShippingDetails(cart.items);
-  const shippingCharges = shippingDetails.reduce(
-    (total, detail) => total + (detail.shippingCharge || 0), // Default to 0 if undefined
-    0
-  );
+  const tax = totalPrice * 0.09; // Assuming 9% tax
+  const shippingCharges = 80; // Example static shipping charge
+  const discount = cart.items.reduce((sum, item) => {
+    return (
+      sum +
+      (item.product.discount &&
+      new Date() >= new Date(item.product.discount.startDate) &&
+      new Date() <= new Date(item.product.discount.endDate)
+        ? (item.product.price * item.product.discount.percentage) / 100
+        : 0) *
+        item.quantity
+    );
+  }, 0);
 
-  const discount = calculateDiscount(cart.items) || 0; // Default to 0 if undefined
   const grandTotal = totalPrice + tax + shippingCharges - discount;
-  const roundedGrandTotal = Math.round(grandTotal);
 
   return {
     totalPrice,
     tax,
-    shippingDetails,
     shippingCharges,
     discount,
-    grandTotal: roundedGrandTotal,
+    grandTotal,
   };
 };
 
@@ -52,6 +60,10 @@ const getCartByUserId = asyncHandler(async (req, res) => {
   }
 
   const cartDetails = calculateCart(cart);
+
+  cart.totalPrice = cartDetails.totalPrice;
+  cart.tax = cartDetails.tax;
+  cart.discount = cartDetails.discount;
 
   return res
     .status(200)
