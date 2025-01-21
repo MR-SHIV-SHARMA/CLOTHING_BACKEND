@@ -74,43 +74,47 @@ const addItemToCart = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
+  // Find the cart and populate all product details
   let cart = await Cart.findOne({ user: userId }).populate("items.product");
 
   if (!cart) {
+    // Create a new cart if it doesn't exist
     cart = new Cart({
       user: userId,
       items: [{ product: productId, quantity }],
     });
-
     await cart.populate("items.product");
   } else {
+    // Check if the product already exists in the cart
     const itemIndex = cart.items.findIndex(
       (item) => item.product._id.toString() === productId
     );
 
     if (itemIndex > -1) {
+      // If the product exists, update the quantity
       cart.items[itemIndex].quantity += quantity;
     } else {
+      // Add the new product to the cart
       cart.items.push({ product: productId, quantity });
     }
 
     if (appliedCoupon) {
-      cart.appliedCoupon = appliedCoupon;
+      cart.appliedCoupon = appliedCoupon; // Apply coupon if provided
     }
   }
 
-  const {
-    totalPrice,
-    tax,
-    shippingDetails,
-    shippingCharges,
-    discount,
-    grandTotal,
-  } = calculateCart(cart);
+  // Save the updated cart
+  await cart.save();
 
-  cart.totalPrice = totalPrice;
-  cart.tax = tax;
-  cart.discount = discount;
+  // Populate the cart again to ensure all product details are included
+  cart = await Cart.findById(cart._id).populate("items.product");
+
+  const cartDetails = calculateCart(cart);
+
+  // Update cart values in the database
+  cart.totalPrice = cartDetails.totalPrice;
+  cart.tax = cartDetails.tax;
+  cart.discount = cartDetails.discount;
   await cart.save();
 
   return res.status(200).json(
@@ -118,13 +122,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
       200,
       {
         cart,
-        cartDetails: {
-          totalPrice,
-          tax,
-          discount,
-          shippingCharges,
-          grandTotal: totalPrice + tax + shippingCharges - discount,
-        },
+        cartDetails, // Send full cart details in response
       },
       "Item added to cart successfully"
     )
