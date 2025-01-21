@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { Cart } from "../Models/cart.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
@@ -9,42 +8,26 @@ import {
   calculateTax,
   calculateShippingDetails,
   calculateDiscount,
-  calculateCartDetails,
-  calculateShippingCharges,
 } from "../utils/calculateTax.js";
 
-// Error handling for invalid or missing product
-const validateProductInCart = (cart, productId) => {
-  const itemIndex = cart.items.findIndex(
-    (item) => item.product._id.toString() === productId
-  );
-  if (itemIndex === -1) {
-    throw new apiError(404, "Product not found in cart");
-  }
-};
-
 const calculateCart = (cart) => {
+  // Calculate total price
   const totalPrice = cart.items.reduce((total, item) => {
-    const discount =
-      (item.product.price * (item.product.discount?.percentage || 0)) / 100;
-    const discountedPrice = item.product.price - discount;
-    return total + discountedPrice * item.quantity;
+    const price = parseFloat(item.product.price) || 0; // Access price from item.product
+    const quantity = parseInt(item.quantity, 10) || 0; // Access quantity directly from item
+    return total + price * quantity;
   }, 0);
 
+  // Calculate other cart details
   const tax = calculateTax(cart.items);
   const shippingDetails = calculateShippingDetails(cart.items);
   const shippingCharges = shippingDetails.reduce(
-    (total, detail) => total + detail.shippingCharge,
+    (total, detail) => total + (detail.shippingCharge || 0), // Default to 0 if undefined
     0
   );
 
-  // Calculate total discount
-  const discount = calculateDiscount(cart.items);
-
-  // Calculate grand total
+  const discount = calculateDiscount(cart.items) || 0; // Default to 0 if undefined
   const grandTotal = totalPrice + tax + shippingCharges - discount;
-
-  // Round the grand total to the nearest integer or specify the number of decimal places you want
   const roundedGrandTotal = Math.round(grandTotal);
 
   return {
@@ -55,13 +38,6 @@ const calculateCart = (cart) => {
     discount,
     grandTotal: roundedGrandTotal,
   };
-};
-
-// Custom Error Handling for Invalid Cart State
-const handleCartError = (cart) => {
-  if (!cart || cart.items.length === 0) {
-    throw new apiError(400, "Your cart is empty.");
-  }
 };
 
 // Get cart by user ID
@@ -98,22 +74,16 @@ const addItemToCart = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found." });
   }
 
-  // Find the cart or create a new one
   let cart = await Cart.findOne({ user: userId }).populate("items.product");
 
   if (!cart) {
     cart = new Cart({
       user: userId,
       items: [{ product: productId, quantity }],
-      appliedCoupon,
-      tax: 0,
-      shippingDetails: [],
-      discount: 0,
     });
 
     await cart.populate("items.product");
   } else {
-    // Update existing cart
     const itemIndex = cart.items.findIndex(
       (item) => item.product._id.toString() === productId
     );
@@ -129,33 +99,32 @@ const addItemToCart = asyncHandler(async (req, res) => {
     }
   }
 
-  // Recalculate all fields
-  const { totalPrice, tax, discount, shippingDetails, grandTotal } =
-    calculateCartDetails(cart);
+  const {
+    totalPrice,
+    tax,
+    shippingDetails,
+    shippingCharges,
+    discount,
+    grandTotal,
+  } = calculateCart(cart);
 
   cart.totalPrice = totalPrice;
   cart.tax = tax;
   cart.discount = discount;
-  cart.shippingDetails = shippingDetails;
-
   await cart.save();
-
-  // Prepare response
-  const cartDetails = {
-    totalPrice,
-    tax,
-    shippingDetails,
-    shippingCharges: calculateShippingCharges(shippingDetails),
-    discount,
-    grandTotal,
-  };
 
   return res.status(200).json(
     new apiResponse(
       200,
       {
         cart,
-        cartDetails,
+        cartDetails: {
+          totalPrice,
+          tax,
+          discount,
+          shippingCharges,
+          grandTotal: totalPrice + tax + shippingCharges - discount,
+        },
       },
       "Item added to cart successfully"
     )
