@@ -76,4 +76,64 @@ const calculateDiscount = (items) => {
   }, 0);
 };
 
-export { calculateTax, calculateShippingDetails, calculateDiscount };
+const calculateShippingCharges = (items) => {
+  // Example: Flat shipping fee of 60 for each vendor
+  const vendors = new Set();
+  items.forEach((item) => {
+    if (item.product && item.product.merchant) {
+      vendors.add(item.product.merchant.toString());
+    }
+  });
+
+  return vendors.size * 60; // 60 is the flat fee per vendor
+};
+
+const calculateCartDetails = (cart) => {
+  let totalPrice = 0;
+  let totalDiscount = 0;
+  const shippingDetails = [];
+
+  cart.items.forEach((item) => {
+    const product = item.product;
+    const quantity = item.quantity;
+
+    if (product) {
+      const isDiscountValid =
+        product.discount &&
+        new Date() >= new Date(product.discount.startDate) &&
+        new Date() <= new Date(product.discount.endDate);
+
+      const discountPercentage = isDiscountValid
+        ? product.discount.percentage
+        : 0;
+
+      const productDiscount = (product.price * discountPercentage) / 100;
+      const discountedPrice = product.price - productDiscount;
+
+      totalDiscount += productDiscount * quantity;
+      totalPrice += discountedPrice * quantity;
+    }
+  });
+
+  // Calculate tax and shipping
+  const tax = totalPrice * 0.05; // Example: 5% tax
+  const shippingCharges = calculateShippingCharges(cart.items);
+
+  const grandTotal = totalPrice + tax + shippingCharges - totalDiscount;
+
+  return {
+    totalPrice,
+    tax,
+    discount: totalDiscount,
+    shippingDetails: shippingDetails,
+    grandTotal,
+  };
+};
+
+export {
+  calculateTax,
+  calculateShippingDetails,
+  calculateDiscount,
+  calculateCartDetails,
+  calculateShippingCharges,
+};

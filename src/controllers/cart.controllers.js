@@ -9,6 +9,8 @@ import {
   calculateTax,
   calculateShippingDetails,
   calculateDiscount,
+  calculateCartDetails,
+  calculateShippingCharges,
 } from "../utils/calculateTax.js";
 
 // Error handling for invalid or missing product
@@ -90,16 +92,17 @@ const addItemToCart = asyncHandler(async (req, res) => {
     throw new apiError(400, "Product ID and Quantity are required.");
   }
 
-  let userId = req.admin._id;
+  const userId = req.admin._id;
   const user = await User.findById(userId);
   if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
 
+  // Find the cart or create a new one
   let cart = await Cart.findOne({ user: userId }).populate("items.product");
 
   if (!cart) {
-    cart = await Cart.create({
+    cart = new Cart({
       user: userId,
       items: [{ product: productId, quantity }],
       appliedCoupon,
@@ -107,40 +110,56 @@ const addItemToCart = asyncHandler(async (req, res) => {
       shippingDetails: [],
       discount: 0,
     });
+
     await cart.populate("items.product");
-    cart.tax = calculateTax(cart.items);
-    cart.shippingDetails = calculateShippingDetails(cart.items);
-    cart.discount = calculateDiscount(cart.items);
-    await cart.save();
-    return res
-      .status(201)
-      .json(new apiResponse(201, cart, "Item added to cart successfully"));
-  }
-
-  const itemIndex = cart.items.findIndex(
-    (item) => item.product._id.toString() === productId
-  );
-
-  if (itemIndex > -1) {
-    cart.items[itemIndex].quantity += quantity;
   } else {
-    cart.items.push({ product: productId, quantity });
+    // Update existing cart
+    const itemIndex = cart.items.findIndex(
+      (item) => item.product._id.toString() === productId
+    );
+
+    if (itemIndex > -1) {
+      cart.items[itemIndex].quantity += quantity;
+    } else {
+      cart.items.push({ product: productId, quantity });
+    }
+
+    if (appliedCoupon) {
+      cart.appliedCoupon = appliedCoupon;
+    }
   }
 
-  await cart.populate("items.product");
+  // Recalculate all fields
+  const { totalPrice, tax, discount, shippingDetails, grandTotal } =
+    calculateCartDetails(cart);
 
-  if (appliedCoupon) {
-    cart.appliedCoupon = appliedCoupon;
-  }
-
-  cart.tax = calculateTax(cart.items);
-  cart.shippingDetails = calculateShippingDetails(cart.items);
-  cart.discount = calculateDiscount(cart.items);
+  cart.totalPrice = totalPrice;
+  cart.tax = tax;
+  cart.discount = discount;
+  cart.shippingDetails = shippingDetails;
 
   await cart.save();
-  return res
-    .status(200)
-    .json(new apiResponse(200, cart, "Item added to cart successfully"));
+
+  // Prepare response
+  const cartDetails = {
+    totalPrice,
+    tax,
+    shippingDetails,
+    shippingCharges: calculateShippingCharges(shippingDetails),
+    discount,
+    grandTotal,
+  };
+
+  return res.status(200).json(
+    new apiResponse(
+      200,
+      {
+        cart,
+        cartDetails,
+      },
+      "Item added to cart successfully"
+    )
+  );
 });
 
 // Remove item from cart

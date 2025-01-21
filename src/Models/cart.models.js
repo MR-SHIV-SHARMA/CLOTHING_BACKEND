@@ -33,18 +33,39 @@ const cartSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save hook for totalPrice calculation
+// Pre-save hook for totalPrice and discount calculation
 cartSchema.pre("save", async function (next) {
-  this.totalPrice = await this.items.reduce(async (total, item) => {
-    const product = await mongoose.model("Product").findById(item.product);
-    if (product) {
-      const discountedPrice =
-        product.price -
-        (product.price * (product.discount?.percentage || 0)) / 100;
-      return total + discountedPrice * item.quantity;
-    }
-    return total;
-  }, 0);
+  let totalPrice = 0;
+  let totalDiscount = 0;
+
+  // Asynchronously calculate total price and discount
+  await Promise.all(
+    this.items.map(async (item) => {
+      const product = await mongoose.model("Product").findById(item.product);
+
+      if (product) {
+        // Check if discount is valid
+        const currentDate = new Date();
+        const isDiscountValid =
+          product.discount &&
+          currentDate >= new Date(product.discount.startDate) &&
+          currentDate <= new Date(product.discount.endDate);
+
+        const discountPercentage = isDiscountValid
+          ? product.discount.percentage
+          : 0;
+
+        const productDiscount = (product.price * discountPercentage) / 100; // Discount per unit
+        const discountedPrice = product.price - productDiscount;
+
+        totalDiscount += productDiscount * item.quantity; // Total discount for this item
+        totalPrice += discountedPrice * item.quantity; // Accumulate discounted price
+      }
+    })
+  );
+
+  this.totalPrice = totalPrice;
+  this.discount = totalDiscount;
   next();
 });
 
