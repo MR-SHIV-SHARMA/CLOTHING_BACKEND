@@ -35,8 +35,8 @@ const createPayment = asyncHandler(async (req, res) => {
     mobileNumber: mobileNumber,
     amount: paymentAmount * 100, // converting amount to paise
     merchantTransactionId: orderId,
-    redirectUrl: `${redirectUrl}/?id=${orderId}`,
-    redirectMode: "POST",
+    redirectUrl: `${redirectUrl}?id=${orderId}`,
+    redirectMode: "GET",
     paymentInstrument: {
       type: "PAY_PAGE",
     },
@@ -121,16 +121,16 @@ const paymentStatus = asyncHandler(async (req, res) => {
     const phonePeResponse = response.data;
 
     if (phonePeResponse.success === true) {
-      // Update Payment Status in Database
-      const payment = await Payment.findOne({
-        transactionId: merchantTransactionId,
-      });
-      if (payment) {
-        payment.paymentStatus = "success";
-        await payment.save();
+      // Update the existing payment record in the database
+      const updatedPayment = await Payment.findOneAndUpdate(
+        { transactionId: merchantTransactionId },
+        { paymentStatus: "success" }, // Update the payment status to 'success'
+        { new: true } // Return the updated document
+      );
 
-        // Update Order Status (if necessary)
-        const order = await Order.findById(payment.order);
+      if (updatedPayment) {
+        // Update the corresponding order status if necessary
+        const order = await Order.findById(updatedPayment.order);
         if (order) {
           order.orderStatus = "Paid";
           await order.save();
@@ -143,14 +143,12 @@ const paymentStatus = asyncHandler(async (req, res) => {
         paymentStatus: "success",
       });
     } else {
-      // Payment Failed
-      const payment = await Payment.findOne({
-        transactionId: merchantTransactionId,
-      });
-      if (payment) {
-        payment.paymentStatus = "failed";
-        await payment.save();
-      }
+      // Handle payment failure
+      await Payment.findOneAndUpdate(
+        { transactionId: merchantTransactionId },
+        { paymentStatus: "failed" }, // Update the payment status to 'failed'
+        { new: true }
+      );
 
       return res.status(200).json({
         success: false,
