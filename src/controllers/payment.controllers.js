@@ -8,7 +8,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import axios from "axios";
 import crypto from "crypto";
-// import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 
 // Create a new payment
 const createPayment = asyncHandler(async (req, res) => {
@@ -28,14 +28,17 @@ const createPayment = asyncHandler(async (req, res) => {
   // The amount is taken from the order's grandTotal
   const paymentAmount = order.grandTotal;
 
+  // Generate a unique transaction ID
+  const transactionId = uuidv4();
+
   // Payment Payload for PhonePe
   const paymentPayload = {
     merchantId: process.env.MERCHANT_ID,
     merchantUserId: name,
     mobileNumber: mobileNumber,
     amount: paymentAmount * 100, // converting amount to paise
-    merchantTransactionId: orderId,
-    redirectUrl: `${redirectUrl}?id=${orderId}`,
+    merchantTransactionId: transactionId, // Using the unique transaction ID
+    redirectUrl: `${redirectUrl}?id=${transactionId}`,
     redirectMode: "GET",
     paymentInstrument: {
       type: "PAY_PAGE",
@@ -74,7 +77,7 @@ const createPayment = asyncHandler(async (req, res) => {
       paymentMethod,
       paymentStatus: "pending", // Default status
       amount: paymentAmount,
-      transactionId: orderId, // Same as merchantTransactionId
+      transactionId: transactionId, // Using the unique transaction ID
     });
 
     await payment.save(); // Save the payment record in the database
