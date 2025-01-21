@@ -91,7 +91,7 @@ const createPayment = asyncHandler(async (req, res) => {
 
 // Status callback endpoint
 const paymentStatus = asyncHandler(async (req, res) => {
-  const merchantTransactionId = req.query.id;
+  const merchantTransactionId = req.query.id || req.body.id; // Handle GET and POST
 
   // Validate the transaction ID
   if (!merchantTransactionId) {
