@@ -6,20 +6,11 @@ import { Shipping } from "../Models/shipping.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-// Create a new payment
-// import express from "express";
 import axios from "axios";
 import crypto from "crypto";
 // import { v4 as uuidv4 } from "uuid";
 
-const MERCHANT_BASE_URL =
-  "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
-const MERCHANT_STATUS_URL =
-  "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status";
-const MERCHANT_KEY = "96434309-7796-489d-8924-ab56988a6076";
-const MERCHANT_ID = "PGTESTPAYUAT86";
-
+// Create a new payment
 const createPayment = asyncHandler(async (req, res) => {
   const { orderId, paymentMethod, mobileNumber, name, redirectUrl } = req.body;
 
@@ -34,18 +25,18 @@ const createPayment = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "Order not found." });
   }
 
-  // The amount is taken from the order's grandTotal if not passed
+  // The amount is taken from the order's grandTotal
   const paymentAmount = order.grandTotal;
 
   // Payment Payload for PhonePe
   const paymentPayload = {
-    merchantId: MERCHANT_ID,
+    merchantId: process.env.MERCHANT_ID,
     merchantUserId: name,
     mobileNumber: mobileNumber,
     amount: paymentAmount * 100, // converting amount to paise
     merchantTransactionId: orderId,
     redirectUrl: `${redirectUrl}/?id=${orderId}`,
-    redirectMode: "GET",
+    redirectMode: "POST",
     paymentInstrument: {
       type: "PAY_PAGE",
     },
@@ -55,13 +46,13 @@ const createPayment = asyncHandler(async (req, res) => {
     "base64"
   );
   const keyIndex = 1;
-  const string = payload + "/pg/v1/pay" + MERCHANT_KEY;
+  const string = payload + "/pg/v1/pay" + process.env.MERCHANT_KEY;
   const sha256 = crypto.createHash("sha256").update(string).digest("hex");
   const checksum = sha256 + "###" + keyIndex;
 
   const options = {
     method: "POST",
-    url: MERCHANT_BASE_URL,
+    url: process.env.MERCHANT_BASE_URL,
     headers: {
       accept: "application/json",
       "Content-Type": "application/json",
@@ -76,6 +67,18 @@ const createPayment = asyncHandler(async (req, res) => {
     // Initiate payment request
     const response = await axios.request(options);
     const redirectUrl = response.data.data.instrumentResponse.redirectInfo.url;
+
+    // Save payment in the database
+    const payment = new Payment({
+      order: order._id,
+      paymentMethod,
+      paymentStatus: "pending", // Default status
+      amount: paymentAmount,
+      transactionId: orderId, // Same as merchantTransactionId
+    });
+
+    await payment.save(); // Save the payment record in the database
+
     return res.status(200).json({
       msg: "Payment initiated successfully",
       url: redirectUrl,
@@ -97,18 +100,19 @@ const paymentStatus = asyncHandler(async (req, res) => {
 
   const keyIndex = 1;
   const string =
-    `/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}` + MERCHANT_KEY;
+    `/pg/v1/status/${process.env.MERCHANT_ID}/${merchantTransactionId}` +
+    process.env.MERCHANT_KEY;
   const sha256 = crypto.createHash("sha256").update(string).digest("hex");
   const checksum = sha256 + "###" + keyIndex;
 
   const options = {
     method: "GET",
-    url: `${MERCHANT_STATUS_URL}/${MERCHANT_ID}/${merchantTransactionId}`,
+    url: `${process.env.MERCHANT_STATUS_URL}/${process.env.MERCHANT_ID}/${merchantTransactionId}`,
     headers: {
       accept: "application/json",
       "Content-Type": "application/json",
       "X-VERIFY": checksum,
-      "X-MERCHANT-ID": MERCHANT_ID,
+      "X-MERCHANT-ID": process.env.MERCHANT_ID,
     },
   };
 

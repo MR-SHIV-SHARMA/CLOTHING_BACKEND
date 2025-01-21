@@ -20,7 +20,7 @@ const router = express.Router();
 router.post("/", authenticateAdmin, createPayment);
 
 // Status callback endpoint
-router.get("/status", authenticateAdmin, paymentStatus);
+router.post("/status", authenticateAdmin, paymentStatus);
 
 // Get all payments
 router.get("/", authenticateAdmin, getAllPayments);
