@@ -13,18 +13,13 @@ import {
 const calculateCart = (cart) => {
   const totalPrice = cart.items.reduce((sum, item) => {
     const productPrice = item.product.price;
-    const discount =
-      item.product.discount &&
-      new Date() >= new Date(item.product.discount.startDate) &&
-      new Date() <= new Date(item.product.discount.endDate)
-        ? (productPrice * item.product.discount.percentage) / 100
-        : 0;
-    const finalPrice = productPrice - discount;
-    return sum + finalPrice * item.quantity;
+    return sum + productPrice * item.quantity;
   }, 0);
 
-  const tax = totalPrice * 0.09; // Assuming 9% tax
-  const shippingCharges = 80; // Example static shipping charge
+  const shippingCharges = calculateShippingDetails(cart.items).reduce(
+    (sum, details) => sum + details.shippingCharge,
+    0
+  ); // Dynamic shipping charge calculation
   const discount = cart.items.reduce((sum, item) => {
     return (
       sum +
@@ -37,14 +32,16 @@ const calculateCart = (cart) => {
     );
   }, 0);
 
+  const tax = calculateTax(cart.items); // Tax calculated dynamically
   const grandTotal = totalPrice + tax + shippingCharges - discount;
+  const roundedTotal = Math.round(grandTotal);
 
   return {
     totalPrice,
     tax,
     shippingCharges,
     discount,
-    grandTotal,
+    grandTotal: roundedTotal,
   };
 };
 
