@@ -1,4 +1,4 @@
-import { Review } from "../models/review.models.js";
+import { Review } from "../Models/review.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -63,15 +63,17 @@ const getReviewById = asyncHandler(async (req, res) => {
 // Update a review by ID
 const updateReviewById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const reviewData = req.body;
+  const { rating, comment } = req.body;
 
-  const updatedReview = await Review.findByIdAndUpdate(id, reviewData, {
-    new: true,
-  });
-
-  if (!updatedReview) {
-    throw new apiError(404, "Review not found.");
+  if (!rating && !comment) {
+    throw new apiError(400, "Rating or comment must be provided for update.");
   }
+
+  const updatedReview = await Review.findByIdAndUpdate(
+    id,
+    { rating, comment },
+    { new: true }
+  );
 
   return res
     .status(200)
