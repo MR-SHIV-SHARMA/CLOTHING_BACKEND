@@ -20,7 +20,7 @@ const orderSchema = new mongoose.Schema(
     ],
     discount: { type: Number, required: true },
     grandTotal: { type: Number, required: true },
-    status: { type: String, default: "Pending" },
+    status: { type: String, enum: ["Pending", "Success"], default: "Pending" },
     appliedCoupon: { type: mongoose.Schema.Types.ObjectId, ref: "Coupon" },
     shippingAddress: {
       type: mongoose.Schema.Types.ObjectId,

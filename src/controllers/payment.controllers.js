@@ -135,6 +135,7 @@ const paymentStatus = asyncHandler(async (req, res) => {
         // Update the corresponding order status if necessary
         const order = await Order.findById(updatedPayment.order);
         if (order) {
+          order.status = "Success";
           order.paymentStatus = "paid";
           await order.save();
         }

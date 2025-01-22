@@ -329,7 +329,7 @@ const checkout = asyncHandler(async (req, res) => {
   await order.save();
 
   // Optionally, clear cart after successful checkout
-  await Cart.deleteOne({ user: userId });
+  // await Cart.deleteOne({ user: userId });
 
   return res.status(201).json({
     message: "Order placed successfully.",
