@@ -2,14 +2,21 @@ import { Review } from "../models/review.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../Models/user.models.js";
 
 // Create a new review
 const createReview = asyncHandler(async (req, res) => {
-  const { user, product, rating, comment } = req.body;
+  const { product, rating, comment } = req.body;
 
   // Validate required fields
-  if (!user || !product || !rating) {
-    throw new apiError(400, "User, product, and rating are required.");
+  if (!product || !rating) {
+    throw new apiError(400, "Product, and rating are required.");
+  }
+  const userId = req.admin._id;
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new apiError(400, "User ID is required.");
   }
 
   // Create the review

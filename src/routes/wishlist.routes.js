@@ -4,16 +4,17 @@ import {
   getWishlistByUserId,
   removeProductFromWishlist,
 } from "../controllers/wishlist.controllers.js";
+import authenticateAdmin from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // Create or update wishlist for a user
-router.post("/:productId", createOrUpdateWishlist);
+router.post("/:productId", authenticateAdmin, createOrUpdateWishlist);
 
 // Get wishlist for a user
-router.get("/:userId", getWishlistByUserId);
+router.get("/:userId", authenticateAdmin, getWishlistByUserId);
 
 // Remove product from wishlist
-router.delete("/:productId", removeProductFromWishlist);
+router.delete("/:productId", authenticateAdmin, removeProductFromWishlist);
 
 export default router;
