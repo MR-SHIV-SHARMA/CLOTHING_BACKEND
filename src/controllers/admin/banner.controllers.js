@@ -1,8 +1,8 @@
-import { Banner } from "../models/banner.models.js";
-import { apiError } from "../utils/apiError.js";
-import { apiResponse } from "../utils/apiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadFileToCloudinary } from "../utils/cloudinary.js";
+import { Banner } from "../../Models/adminmodels/banner.models.js";
+import { apiError } from "../../utils/apiError.js";
+import { apiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { uploadFileToCloudinary } from "../../utils/cloudinary.js";
 
 // Create a new banner
 const createBanner = asyncHandler(async (req, res) => {

@@ -7,12 +7,12 @@ import {
   deleteBannerById,
   toggleBannerStatus,
   deleteMultipleBanners,
-} from "../controllers/banner.controllers.js";
-import authenticateAdmin from "../middlewares/authMiddleware.js";
-import { checkRole } from "../middlewares/roleMiddleware.js";
-import { adminRateLimiter } from "../middlewares/rateLimiter.js";
-import { upload } from "../middlewares/multer.middlewares.js";
-import { logAction } from "../middlewares/auditLogMiddleware.js";
+} from "../../controllers/admin/banner.controllers.js";
+import authenticateAdmin from "../../middlewares/authMiddleware.js";
+import { checkRole } from "../../middlewares/roleMiddleware.js";
+import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
+import { upload } from "../../middlewares/multer.middlewares.js";
+import { logAction } from "../../middlewares/auditLogMiddleware.js";
 
 const router = express.Router();
 

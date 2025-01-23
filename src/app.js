@@ -34,7 +34,7 @@ import orderRoutes from "./routes/order.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import refundRoutes from "./routes/refund.routes.js";
 import couponRoutes from "./routes/coupon.routes.js";
-import bannerRoutes from "./routes/banner.routes.js";
+import bannerRoutes from "./routes/admin/banner.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import addressRoutes from "./routes/address.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
