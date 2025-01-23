@@ -3,13 +3,14 @@ import {
   getAllProducts,
   getProductById,
 } from "../controllers/product.controllers.js";
+import { adminRateLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 
 // Get all products with optional filters
-router.route("/").get(getAllProducts);
+router.get("/", adminRateLimiter, getAllProducts);
 
 // Get a specific product by ID
-router.route("/:id").get(getProductById);
+router.get("/:id", adminRateLimiter, getProductById);
 
 export default router;
