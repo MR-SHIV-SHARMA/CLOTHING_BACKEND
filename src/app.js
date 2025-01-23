@@ -45,6 +45,8 @@ import inventoryRoutes from "./routes/inventory.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 
+import seoMetadataRoutes from "./routes/aditionl/seoMetadata.routes.js";
+
 // admin block
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
@@ -71,5 +73,7 @@ app.use("/api/v1/audit-logs", auditLogRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/inventories", inventoryRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+
+app.use("/api/v1/seo-metadata", seoMetadataRoutes);
 
 export { app };
