@@ -11,12 +11,10 @@ const createNotification = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const user = await User.findById(userId);
 
-  // Validate required fields
   if (!user || !message) {
     throw new apiError(400, "User and message are required.");
   }
 
-  // Create the notification
   const notification = await Notification.create({
     user,
     message,
@@ -32,9 +30,8 @@ const createNotification = asyncHandler(async (req, res) => {
 // Get all notifications for a specific user
 const getAllNotifications = asyncHandler(async (req, res) => {
   const user = req.user._id;
-  const userId = await User.findById(user);
 
-  const notifications = await Notification.find({ user: userId }).sort({
+  const notifications = await Notification.find({ user }).sort({
     createdAt: -1,
   });
 
@@ -86,6 +83,26 @@ const markNotificationAsRead = asyncHandler(async (req, res) => {
     );
 });
 
+// Mark all notifications as read
+const markAllNotificationsAsRead = asyncHandler(async (req, res) => {
+  const user = req.user._id;
+
+  const updatedNotifications = await Notification.updateMany(
+    { user, isRead: false },
+    { $set: { isRead: true } }
+  );
+
+  return res
+    .status(200)
+    .json(
+      new apiResponse(
+        200,
+        updatedNotifications,
+        "All notifications marked as read successfully."
+      )
+    );
+});
+
 // Delete a notification by ID
 const deleteNotificationById = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -100,10 +117,33 @@ const deleteNotificationById = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "Notification deleted successfully."));
 });
 
+// Delete multiple notifications by IDs
+const deleteMultipleNotifications = asyncHandler(async (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids)) {
+    throw new apiError(400, "Invalid notification IDs.");
+  }
+
+  const result = await Notification.deleteMany({ _id: { $in: ids } });
+
+  return res
+    .status(200)
+    .json(
+      new apiResponse(
+        200,
+        result,
+        `${result.deletedCount} notifications deleted successfully.`
+      )
+    );
+});
+
 export {
   createNotification,
   getAllNotifications,
   getNotificationById,
   markNotificationAsRead,
+  markAllNotificationsAsRead,
   deleteNotificationById,
+  deleteMultipleNotifications,
 };
