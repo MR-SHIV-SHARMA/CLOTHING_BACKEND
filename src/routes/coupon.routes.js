@@ -6,22 +6,54 @@ import {
   updateCouponById,
   deleteCouponById,
 } from "../controllers/coupon.controllers.js";
+import authenticateAdmin from "../middlewares/authMiddleware.js";
+import { checkRole } from "../middlewares/roleMiddleware.js";
+import { adminRateLimiter } from "../middlewares/rateLimiter.js";
+import { logAction } from "../middlewares/auditLogMiddleware.js";
 
 const router = express.Router();
 
 // Create a new coupon
-router.post("/", createCoupon);
+router.post(
+  "/",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole("admin", "superadmin", "merchant"),
+  logAction("Create Coupon"),
+  createCoupon
+);
 
 // Get all coupons
-router.get("/", getAllCoupons);
+router.get(
+  "/",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole("admin", "superadmin"),
+  logAction("Get All Coupon"),
+  getAllCoupons
+);
 
 // Get a coupon by ID
 router.get("/:id", getCouponById);
 
 // Update a coupon by ID
-router.put("/:id", updateCouponById);
+router.put(
+  "/:id",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole("admin", "superadmin", "merchant"),
+  logAction("Update A Coupon By Id"),
+  updateCouponById
+);
 
 // Delete a coupon by ID
-router.delete("/:id", deleteCouponById);
+router.delete(
+  "/:id",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole("admin", "superadmin", "merchant"),
+  logAction("Delete A Coupon By Id"),
+  deleteCouponById
+);
 
 export default router;
