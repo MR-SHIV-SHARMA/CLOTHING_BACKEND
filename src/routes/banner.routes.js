@@ -12,6 +12,7 @@ import authenticateAdmin from "../middlewares/authMiddleware.js";
 import { checkRole } from "../middlewares/roleMiddleware.js";
 import { adminRateLimiter } from "../middlewares/rateLimiter.js";
 import { upload } from "../middlewares/multer.middlewares.js";
+import { logAction } from "../middlewares/auditLogMiddleware.js";
 
 const router = express.Router();
 
@@ -22,22 +23,24 @@ router.post(
   checkRole(["admin", "super-admin", "merchant"]),
   upload.fields([{ name: "image", maxCount: 1 }]), // Accept only one image
   adminRateLimiter,
+  logAction("Create Banner"),
   createBanner
 );
 
 // Get all banners (with optional filtering by isActive)
-router.get("/", getAllBanners);
+router.get("/", logAction("Get All Banners"), getAllBanners);
 
 // Get a banner by ID
-router.get("/:id", getBannerById);
+router.get("/:id", logAction("Get Banner By ID"), getBannerById);
 
 // Update a banner by ID
 router.put(
   "/:id",
   authenticateAdmin,
   checkRole(["admin", "super-admin", "merchant"]),
-  upload.single("image"), // Accept a single image file
+  upload.single("image"),
   adminRateLimiter,
+  logAction("Update Banner By ID"),
   updateBannerById
 );
 
@@ -47,6 +50,7 @@ router.delete(
   authenticateAdmin,
   checkRole(["admin", "super-admin", "merchant"]),
   adminRateLimiter,
+  logAction("Delete Banner By ID"),
   deleteBannerById
 );
 
@@ -56,6 +60,7 @@ router.patch(
   authenticateAdmin,
   checkRole(["admin", "super-admin", "merchant"]),
   adminRateLimiter,
+  logAction("Toggle Banner Status"),
   toggleBannerStatus
 );
 
@@ -65,6 +70,7 @@ router.post(
   authenticateAdmin,
   checkRole(["admin", "super-admin", "merchant"]),
   adminRateLimiter,
+  logAction("Delete Multiple Banners"),
   deleteMultipleBanners
 );
 
