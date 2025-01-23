@@ -1,11 +1,15 @@
-import { Notification } from "../models/notification.models.js";
+import { Notification } from "../Models/notification.models.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../Models/user.models.js";
 
 // Create a new notification
 const createNotification = asyncHandler(async (req, res) => {
-  const { user, message } = req.body;
+  const { message } = req.body;
+
+  const userId = req.user._id;
+  const user = await User.findById(userId);
 
   // Validate required fields
   if (!user || !message) {
@@ -20,18 +24,25 @@ const createNotification = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new apiResponse(201, notification, "Notification created successfully."));
+    .json(
+      new apiResponse(201, notification, "Notification created successfully.")
+    );
 });
 
 // Get all notifications for a specific user
 const getAllNotifications = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const user = req.user._id;
+  const userId = await User.findById(user);
 
-  const notifications = await Notification.find({ user: userId }).sort({ createdAt: -1 });
+  const notifications = await Notification.find({ user: userId }).sort({
+    createdAt: -1,
+  });
 
   return res
     .status(200)
-    .json(new apiResponse(200, notifications, "Notifications fetched successfully."));
+    .json(
+      new apiResponse(200, notifications, "Notifications fetched successfully.")
+    );
 });
 
 // Get a notification by ID
@@ -45,7 +56,9 @@ const getNotificationById = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new apiResponse(200, notification, "Notification fetched successfully."));
+    .json(
+      new apiResponse(200, notification, "Notification fetched successfully.")
+    );
 });
 
 // Mark a notification as read
@@ -64,7 +77,13 @@ const markNotificationAsRead = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new apiResponse(200, notification, "Notification marked as read successfully."));
+    .json(
+      new apiResponse(
+        200,
+        notification,
+        "Notification marked as read successfully."
+      )
+    );
 });
 
 // Delete a notification by ID
