@@ -47,6 +47,7 @@ import notificationRoutes from "./routes/notification.routes.js";
 
 import seoMetadataRoutes from "./routes/aditionl/seoMetadata.routes.js";
 import faqRoutes from "./routes/aditionl/faq.routes.js";
+import feedbackRoutes from "./routes/aditionl/feedback.routes.js";
 
 // admin block
 app.use("/auth", authRoutes);
@@ -77,5 +78,6 @@ app.use("/api/v1/notifications", notificationRoutes);
 
 app.use("/api/v1/seo-metadata", seoMetadataRoutes);
 app.use("/api/v1/faq-data", faqRoutes);
+app.use("/api/v1/feedback", feedbackRoutes);
 
 export { app };
