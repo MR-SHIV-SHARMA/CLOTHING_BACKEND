@@ -51,6 +51,7 @@ import feedbackRoutes from "./routes/aditionl/feedback.routes.js";
 import taxRoutes from "./routes/aditionl/tax.routes.js";
 import bulkOrderRoutes from "./routes/aditionl/bulkOrder.routes.js";
 import advertisementRoutes from "./routes/aditionl/advertisement.routes.js";
+import transactionRoutes from "./routes/aditionl/transaction.routes.js";
 
 // admin block
 app.use("/auth", authRoutes);
@@ -85,5 +86,6 @@ app.use("/api/v1/feedback", feedbackRoutes);
 app.use("/api/v1/tax", taxRoutes);
 app.use("/api/v1/bulk-orders", bulkOrderRoutes);
 app.use("/api/v1/advertisements", advertisementRoutes);
+app.use("/api/v1/transactionRoutes", advertisementRoutes);
 
 export { app };
