@@ -5,7 +5,7 @@ import {
   createVendor,
   updateVendor,
   deleteVendor,
-} from "../controllers/aditionl/vendor.controllers.js";
+} from "../../controllers/vendorController/vendor.controllers.js";
 import authenticateAdmin from "../../middlewares/authMiddleware.js";
 import { checkRole } from "../../middlewares/roleMiddleware.js";
 
