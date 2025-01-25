@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { trackAnalytics } from "./middlewares/analytics.middleware.js";
 
 const app = express();
 
@@ -19,47 +20,49 @@ app.use(express.static("public"));
 
 app.use(cookieParser());
 
+app.use(trackAnalytics); // Use the analytics middleware globally
+
 // admin block
-import authRoutes from "./routes/admin/auth.routes.js";
-import adminRoutes from "./routes/admin/admin.routes.js";
-import contentRoutes from "./routes/admin/content.routes.js";
-import activityRoutes from "./routes/admin/activity.routes.js";
-import superAdminRoutes from "./routes/admin/superAdmin.routes.js";
-import brandRoutes from "./routes/admin/brand.routes.js";
-import categoryRoutes from "./routes/admin/category.routes.js";
+import authRoutes from "./routes/adminRoutes/auth.routes.js";
+import brandRoutes from "./routes/adminRoutes/brand.routes.js";
+import adminRoutes from "./routes/adminRoutes/admin.routes.js";
+import contentRoutes from "./routes/adminRoutes/content.routes.js";
+import categoryRoutes from "./routes/adminRoutes/category.routes.js";
+import activityRoutes from "./routes/adminRoutes/activity.routes.js";
+import superAdminRoutes from "./routes/adminRoutes/superAdmin.routes.js";
 
-import userRouter from "./routes/user.routes.js";
-import cartRoutes from "./routes/cart.routes.js";
-import orderRoutes from "./routes/order.routes.js";
-import reviewRoutes from "./routes/review.routes.js";
-import refundRoutes from "./routes/refund.routes.js";
-import couponRoutes from "./routes/coupon.routes.js";
-import bannerRoutes from "./routes/admin/banner.routes.js";
-import productRoutes from "./routes/product.routes.js";
-import addressRoutes from "./routes/address.routes.js";
-import paymentRoutes from "./routes/payment.routes.js";
-import wishlistRoutes from "./routes/wishlist.routes.js";
-import shippingRoutes from "./routes/shipping.routes.js";
-import auditLogRoutes from "./routes/auditLog.routes.js";
-import inventoryRoutes from "./routes/inventory.routes.js";
-import analyticsRoutes from "./routes/analytics.routes.js";
-import notificationRoutes from "./routes/notification.routes.js";
+import userRouter from "./routes/userRoutes/user.routes.js";
+import cartRoutes from "./routes/orderRoutes/cart.routes.js";
+import orderRoutes from "./routes/orderRoutes/order.routes.js";
+import bannerRoutes from "./routes/adminRoutes/banner.routes.js";
+import refundRoutes from "./routes/orderRoutes/refund.routes.js";
+import addressRoutes from "./routes/userRoutes/address.routes.js";
+import reviewRoutes from "./routes/catalogRoutes/review.routes.js";
+import couponRoutes from "./routes/marketingRoutes/coupon.routes.js";
+import productRoutes from "./routes/catalogRoutes/product.routes.js";
+import paymentRoutes from "./routes/paymentRoutes/payment.routes.js";
+import shippingRoutes from "./routes/orderRoutes/shipping.routes.js";
+import auditLogRoutes from "./routes/systemRoutes/auditLog.routes.js";
+import wishlistRoutes from "./routes/catalogRoutes/wishlist.routes.js";
+import analyticsRoutes from "./routes/systemRoutes/analytics.routes.js";
+import inventoryRoutes from "./routes/catalogRoutes/inventory.routes.js";
+import notificationRoutes from "./routes/systemRoutes/notification.routes.js";
 
-import seoMetadataRoutes from "./routes/aditionl/seoMetadata.routes.js";
-import faqRoutes from "./routes/aditionl/faq.routes.js";
-import feedbackRoutes from "./routes/aditionl/feedback.routes.js";
-import taxRoutes from "./routes/aditionl/tax.routes.js";
-import bulkOrderRoutes from "./routes/aditionl/bulkOrder.routes.js";
-import advertisementRoutes from "./routes/aditionl/advertisement.routes.js";
-import transactionRoutes from "./routes/aditionl/transaction.routes.js";
+import faqRoutes from "./routes/systemRoutes/faq.routes.js";
+import taxRoutes from "./routes/paymentRoutes/tax.routes.js";
+import feedbackRoutes from "./routes/userRoutes/feedback.routes.js";
+import bulkOrderRoutes from "./routes/orderRoutes/bulkOrder.routes.js";
+import transactionRoutes from "./routes/paymentRoutes/transaction.routes.js";
+import seoMetadataRoutes from "./routes/marketingRoutes/seoMetadata.routes.js";
+import advertisementRoutes from "./routes/marketingRoutes/advertisement.routes.js";
 
 // admin block
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/content", contentRoutes);
 app.use("/activity", activityRoutes);
-app.use("/super-admin", superAdminRoutes);
 app.use("/api/v1/brands", brandRoutes);
+app.use("/super-admin", superAdminRoutes);
 app.use("/api/v1/categories", categoryRoutes);
 
 app.use("/api/v1/cart", cartRoutes);
@@ -80,12 +83,12 @@ app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/inventories", inventoryRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 
-app.use("/api/v1/seo-metadata", seoMetadataRoutes);
+app.use("/api/v1/tax", taxRoutes);
 app.use("/api/v1/faq-data", faqRoutes);
 app.use("/api/v1/feedback", feedbackRoutes);
-app.use("/api/v1/tax", taxRoutes);
 app.use("/api/v1/bulk-orders", bulkOrderRoutes);
+app.use("/api/v1/seo-metadata", seoMetadataRoutes);
 app.use("/api/v1/advertisements", advertisementRoutes);
-app.use("/api/v1/transactionRoutes", advertisementRoutes);
+app.use("/api/v1/transactionRoutes", transactionRoutes);
 
 export { app };

@@ -1,4 +1,4 @@
-import { User } from "../Models/user.models.js";
+import { User } from "../Models/userModels/user.models.js";
 import nodemailer from "nodemailer";
 
 export const sendEmail = async ({

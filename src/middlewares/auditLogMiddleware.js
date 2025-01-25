@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { createAuditLog } from "../controllers/auditLog.controllers.js";
+import { createAuditLog } from "../controllers/systemController/auditLog.controllers.js";
 
 const logAction = (action) =>
   asyncHandler(async (req, res, next) => {
