@@ -6,17 +6,8 @@ import {
   registerSuperAdmin,
   superAdminCreateAdmin,
   superAdminDeleteAdmin,
-  createMerchant,
-  deleteMerchantById,
-  updateMerchantById,
-  getMerchantAccountById,
-  getAllMerchantAccounts,
-  createBrand,
-  updateBrandById,
-  deleteBrandById,
 } from "../../controllers/adminController/superAdmin.controllers.js";
 import { checkRole } from "../../middlewares/roleMiddleware.js";
-import { upload } from "../../middlewares/multer.middlewares.js";
 import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
 import authenticateAdmin from "../../middlewares/authMiddleware.js";
 
@@ -72,69 +63,6 @@ router.delete(
   authenticateAdmin,
   checkRole(["super-admin"]),
   superAdminDeleteAdmin
-);
-
-router.post("/super-admin/create-merchant", adminRateLimiter, createMerchant);
-
-router.delete(
-  "/super-admin/delete-merchant/:id",
-  adminRateLimiter,
-  authenticateAdmin,
-  checkRole(["super-admin", "merchant"]),
-  deleteMerchantById
-);
-
-router.patch(
-  "/super-admin/update-merchant/:id",
-  adminRateLimiter,
-  authenticateAdmin,
-  checkRole(["merchant"]),
-  updateMerchantById
-);
-
-// Create a new brand for a merchant
-router.post(
-  "/super-admin/createBrand/:id",
-  upload.fields([{ name: "logo", maxCount: 1 }]),
-  adminRateLimiter,
-  authenticateAdmin,
-  checkRole(["merchant"]),
-  createBrand
-);
-
-// Update a brand by ID
-router.patch(
-  "/super-admin/updateBrand/:id",
-  upload.single("logo"),
-  adminRateLimiter,
-  authenticateAdmin,
-  checkRole(["merchant"]),
-  updateBrandById
-);
-
-// Delete a brand by ID
-router.delete(
-  "/super-admin/deleteBrand/:id",
-  adminRateLimiter,
-  authenticateAdmin,
-  checkRole(["merchant"]),
-  deleteBrandById
-);
-
-router.get(
-  "/super-admin/get-merchant/:id",
-  adminRateLimiter,
-  authenticateAdmin,
-  checkRole(["super-admin", "merchant"]),
-  getMerchantAccountById
-);
-
-router.get(
-  "/super-admin/getAll-merchant",
-  adminRateLimiter,
-  authenticateAdmin,
-  checkRole(["super-admin", "admin"]),
-  getAllMerchantAccounts
 );
 
 export default router;
