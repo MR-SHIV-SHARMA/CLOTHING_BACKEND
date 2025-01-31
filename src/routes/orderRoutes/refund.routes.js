@@ -18,7 +18,7 @@ router.post(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Create A New Refund Request"),
   createRefund
 );
@@ -28,7 +28,7 @@ router.get(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get All Refunds"),
   getAllRefunds
 );
@@ -38,7 +38,7 @@ router.get(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get Refund by ID"),
   getRefundById
 );
@@ -48,7 +48,7 @@ router.put(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Update Refund by ID"),
   updateRefundById
 );
@@ -58,7 +58,7 @@ router.delete(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Delete Refund by ID"),
   deleteRefundById
 );

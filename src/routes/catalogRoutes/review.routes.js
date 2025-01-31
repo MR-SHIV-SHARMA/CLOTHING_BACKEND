@@ -19,7 +19,7 @@ router.post(
   authenticateAdmin,
   adminRateLimiter,
   logAction("Create review"),
-  checkRole("customer"),
+  checkRole(["customer"]),
   createReview
 );
 
@@ -39,7 +39,7 @@ router.put(
   authenticateAdmin,
   adminRateLimiter,
   logAction("Update review"),
-  checkRole("customer", "admin"),
+  checkRole(["customer", "admin"]),
   updateReviewById
 );
 
@@ -49,7 +49,7 @@ router.delete(
   authenticateAdmin,
   adminRateLimiter,
   logAction("Delete review"),
-  checkRole("customer", "admin"),
+  checkRole(["customer", "admin"]),
   deleteReviewById
 );
 

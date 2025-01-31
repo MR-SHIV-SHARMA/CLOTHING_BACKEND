@@ -18,7 +18,7 @@ router.post(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant"),
+  checkRole(["admin", "superadmin", "merchant"]),
   logAction("Create Coupon"),
   createCoupon
 );
@@ -28,7 +28,7 @@ router.get(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin"),
+  checkRole(["admin", "superadmin"]),
   logAction("Get All Coupon"),
   getAllCoupons
 );
@@ -41,7 +41,7 @@ router.put(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant"),
+  checkRole(["admin", "superadmin", "merchant"]),
   logAction("Update A Coupon By Id"),
   updateCouponById
 );
@@ -51,7 +51,7 @@ router.delete(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant"),
+  checkRole(["admin", "superadmin", "merchant"]),
   logAction("Delete A Coupon By Id"),
   deleteCouponById
 );

@@ -18,7 +18,7 @@ router.post(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Create Order"),
   createOrder
 );
@@ -28,7 +28,7 @@ router.get(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get All Orders"),
   getAllOrders
 );
@@ -38,7 +38,7 @@ router.get(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get Order by ID"),
   getOrderById
 );
@@ -48,7 +48,7 @@ router.put(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Update Order by ID"),
   updateOrderById
 );
@@ -58,7 +58,7 @@ router.delete(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Delete Order by ID"),
   deleteOrderById
 );

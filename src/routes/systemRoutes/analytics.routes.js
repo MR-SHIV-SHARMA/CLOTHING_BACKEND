@@ -18,7 +18,7 @@ router.post(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Create A New Analytics Record"),
   createAnalytics
 );
@@ -28,7 +28,7 @@ router.get(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get All Analytics Records"),
   getAllAnalytics
 );
@@ -38,7 +38,7 @@ router.get(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get Analytics Record by ID"),
   getAnalyticsById
 );
@@ -48,7 +48,7 @@ router.delete(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Delete Analytics Record by ID"),
   deleteAnalyticsById
 );
@@ -58,7 +58,7 @@ router.put(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Update Analytics Record by ID"),
   updateAnalyticsById
 );

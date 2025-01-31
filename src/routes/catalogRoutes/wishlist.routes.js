@@ -17,7 +17,7 @@ router.post(
   authenticateAdmin,
   adminRateLimiter,
   logAction("Wishlist created or updated"),
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   createOrUpdateWishlist
 );
 
@@ -27,7 +27,7 @@ router.get(
   authenticateAdmin,
   adminRateLimiter,
   logAction("Get wishlist by user ID"),
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   getWishlistByUserId
 );
 
@@ -37,7 +37,7 @@ router.delete(
   authenticateAdmin,
   adminRateLimiter,
   logAction("Remove product from wishlist"),
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   removeProductFromWishlist
 );
 

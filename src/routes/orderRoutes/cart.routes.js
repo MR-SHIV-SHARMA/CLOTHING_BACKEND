@@ -20,7 +20,7 @@ router.get(
   "/:userId",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("customer"),
+  checkRole(["customer"]),
   logAction("Get Cart by User ID"),
   getCartByUserId
 );
@@ -30,7 +30,7 @@ router.post(
   "/add",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("customer"),
+  checkRole(["customer"]),
   logAction("Add Item to Cart"),
   addItemToCart
 );
@@ -40,7 +40,7 @@ router.delete(
   "/remove",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("customer"),
+  checkRole(["customer"]),
   logAction("Remove Item from Cart"),
   removeItemFromCart
 );
@@ -50,7 +50,7 @@ router.delete(
   "/clear",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("customer"),
+  checkRole(["customer"]),
   logAction("Clear Cart"),
   clearCart
 );
@@ -60,7 +60,7 @@ router.put(
   "/increase",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("customer"),
+  checkRole(["customer"]),
   logAction("Increase Item Quantity"),
   increaseQuantity
 );
@@ -70,7 +70,7 @@ router.put(
   "/decrease",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("customer"),
+  checkRole(["customer"]),
   logAction("Decrease Item Quantity"),
   decreaseQuantity
 );
@@ -80,7 +80,7 @@ router.post(
   "/checkout/:userId",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("customer"),
+  checkRole(["customer"]),
   logAction("Checkout Cart"),
   checkout
 );
