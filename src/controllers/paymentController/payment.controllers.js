@@ -73,8 +73,8 @@ const createPayment = asyncHandler(async (req, res) => {
 
     // Save payment in the database
     const payment = new Payment({
-      order: order._id,
-      paymentMethod,
+      order: orderId,
+      paymentMethod: "phonepe", // Hardcoded for PhonePe
       paymentStatus: "pending", // Default status
       amount: paymentAmount,
       transactionId: transactionId, // Using the unique transaction ID

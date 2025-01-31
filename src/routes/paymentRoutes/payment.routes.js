@@ -24,7 +24,7 @@ router.post(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["customer"]),
   logAction("Create A New Payment"),
   createPayment
 );
@@ -34,7 +34,7 @@ router.post(
 //   "/status",
 //   authenticateAdmin,
 //   adminRateLimiter,
-//   checkRole("admin", "superadmin", "merchant", "customer"),
+//   checkRole(["admin", "superadmin", "merchant", "customer"]),
 //   logAction("Payment Status"),
 //   paymentStatus
 // );
@@ -43,7 +43,7 @@ router.post(
 //   "/status",
 //   authenticateAdmin,
 //   adminRateLimiter,
-//   checkRole("admin", "superadmin", "merchant", "customer"),
+//   checkRole(["admin", "superadmin", "merchant", "customer"]),
 //   logAction("Payment Status"),
 //   paymentStatus
 // );
@@ -60,7 +60,7 @@ router.get(
   "/",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get All Payment"),
   getAllPayments
 );
@@ -70,7 +70,7 @@ router.get(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get Payment by ID"),
   getPaymentById
 );
@@ -80,7 +80,7 @@ router.put(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Update Payment by ID"),
   updatePaymentById
 );
@@ -90,7 +90,7 @@ router.delete(
   "/:id",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Delete Payment by ID"),
   deletePaymentById
 );
@@ -100,7 +100,7 @@ router.put(
   "/order/payment-status",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Update Order Payment by ID"),
   updateOrderPaymentStatus
 );
@@ -110,7 +110,7 @@ router.put(
   "/payment/status",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Update Payment Status by ID"),
   updatePaymentStatus
 );
@@ -120,7 +120,7 @@ router.post(
   "/shipping",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Create Shipping Details"),
   createShipping
 );
@@ -130,7 +130,7 @@ router.get(
   "/order-status/:orderId",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Track Order Status"),
   getOrderStatus
 );
@@ -140,7 +140,7 @@ router.get(
   "/user/orders",
   authenticateAdmin,
   adminRateLimiter,
-  checkRole("admin", "superadmin", "merchant", "customer"),
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get All Orders by User"),
   getUserOrders
 );

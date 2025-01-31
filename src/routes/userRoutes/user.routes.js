@@ -20,22 +20,12 @@ const router = Router();
 // Register and login user. No authentication middleware is required for these endpoints.
 router
   .route("/register")
-  .post(
-    adminRateLimiter,
-    logAction("Register User"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
-    registerUser
-  );
+  .post(adminRateLimiter, logAction("Register User"), registerUser);
 
 // Login user. No authentication middleware is required for this endpoint.
 router
   .route("/login")
-  .post(
-    adminRateLimiter,
-    logAction("Login User"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
-    loginUser
-  );
+  .post(adminRateLimiter, logAction("Login User"), loginUser);
 
 // Logout user and refresh access token. Authenticate admin middleware is required for these endpoints.
 // Note: This endpoint is not required for API clients, but for administrative tasks.
@@ -45,7 +35,7 @@ router
     authenticateAdmin,
     adminRateLimiter,
     logAction("Logout User"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
+    checkRole(["admin", "superadmin", "merchant", "customer"]),
     logoutUser
   );
 
@@ -56,7 +46,7 @@ router
     authenticateAdmin,
     adminRateLimiter,
     logAction("Refresh Access Token"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
+    checkRole(["admin", "superadmin", "merchant", "customer"]),
     refreshAccessToken
   );
 
@@ -67,7 +57,7 @@ router
     authenticateAdmin,
     adminRateLimiter,
     logAction("Change Password"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
+    checkRole(["admin", "superadmin", "merchant", "customer"]),
     changeCurrentPassword
   );
 
@@ -78,7 +68,7 @@ router
     authenticateAdmin,
     adminRateLimiter,
     logAction("Get Current User"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
+    checkRole(["admin", "superadmin", "merchant", "customer"]),
     getCurrentUser
   );
 
@@ -89,7 +79,7 @@ router
     authenticateAdmin,
     adminRateLimiter,
     logAction("Update Account Details"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
+    checkRole(["admin", "superadmin", "merchant", "customer"]),
     updateAccountDetails
   );
 
@@ -101,7 +91,7 @@ router
     upload.single("avatar"),
     adminRateLimiter,
     logAction("Update User Avatar"),
-    checkRole("admin", "superadmin", "merchant", "customer"),
+    checkRole(["admin", "superadmin", "merchant", "customer"]),
     updateUserAvatar
   );
 

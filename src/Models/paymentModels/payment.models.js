@@ -20,7 +20,7 @@ const paymentSchema = new mongoose.Schema(
     amount: { type: Number, required: true },
     transactionId: { type: String },
   },
-  { timeseries: true }
+  { timestamps: true }
 );
 
 export const Payment = mongoose.model("Payment", paymentSchema);
