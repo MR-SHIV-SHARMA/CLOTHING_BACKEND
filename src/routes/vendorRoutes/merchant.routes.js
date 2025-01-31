@@ -14,6 +14,7 @@ import { checkRole } from "../../middlewares/roleMiddleware.js";
 import { upload } from "../../middlewares/multer.middlewares.js";
 import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
 import authenticateAdmin from "../../middlewares/authMiddleware.js";
+import { logAction } from "../../middlewares/auditLogMiddleware.js";
 
 const router = express.Router();
 
@@ -26,13 +27,19 @@ router.use(
   })
 );
 
-router.post("/super-admin/create-merchant", adminRateLimiter, createMerchant);
+router.post(
+  "/super-admin/create-merchant",
+  adminRateLimiter,
+
+  createMerchant
+);
 
 router.delete(
   "/super-admin/delete-merchant/:id",
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin", "merchant"]),
+  logAction("Delete Merchant"),
   deleteMerchantById
 );
 
@@ -41,6 +48,7 @@ router.patch(
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["merchant"]),
+  logAction("Update Merchant"),
   updateMerchantById
 );
 
@@ -49,6 +57,7 @@ router.get(
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin", "merchant"]),
+  logAction("Get Merchant by ID"),
   getMerchantAccountById
 );
 
@@ -57,6 +66,7 @@ router.get(
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin", "admin"]),
+  logAction("Get All Merchant Accounts"),
   getAllMerchantAccounts
 );
 
@@ -67,6 +77,7 @@ router.post(
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["merchant"]),
+  logAction("Create Brand"),
   createBrand
 );
 
@@ -77,6 +88,7 @@ router.patch(
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["merchant"]),
+  logAction("Update Brand by ID"),
   updateBrandById
 );
 
@@ -86,6 +98,7 @@ router.delete(
   adminRateLimiter,
   authenticateAdmin,
   checkRole(["merchant"]),
+  logAction("Delete Brand by ID"),
   deleteBrandById
 );
 
