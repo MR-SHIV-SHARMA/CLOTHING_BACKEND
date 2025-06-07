@@ -6,6 +6,8 @@ import {
   registerSuperAdmin,
   superAdminCreateAdmin,
   superAdminDeleteAdmin,
+  getAllSuperAdmins,
+  getAllAdmins,
 } from "../../controllers/adminController/superAdmin.controllers.js";
 import { checkRole } from "../../middlewares/roleMiddleware.js";
 import { adminRateLimiter } from "../../middlewares/rateLimiter.js";
@@ -63,6 +65,24 @@ router.delete(
   authenticateAdmin,
   checkRole(["super-admin"]),
   superAdminDeleteAdmin
+);
+
+// Get all super admins
+router.get(
+  "/super-admin",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["super-admin"]),
+  getAllSuperAdmins
+);
+
+// Get all admins
+router.get(
+  "/admins",
+  adminRateLimiter,
+  authenticateAdmin,
+  checkRole(["super-admin"]),
+  getAllAdmins
 );
 
 export default router;

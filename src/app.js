@@ -57,12 +57,12 @@ import seoMetadataRoutes from "./routes/marketingRoutes/seoMetadata.routes.js";
 import advertisementRoutes from "./routes/marketingRoutes/advertisement.routes.js";
 
 // admin block
-app.use("/auth", authRoutes);
-app.use("/admin", adminRoutes);
-app.use("/content", contentRoutes);
-app.use("/activity", activityRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/content", contentRoutes);
+app.use("/api/v1/activity", activityRoutes);
 app.use("/api/v1/brands", brandRoutes);
-app.use("/super-admin", superAdminRoutes);
+app.use("/api/v1/super-admin", superAdminRoutes);
 app.use("/api/v1/categories", categoryRoutes);
 
 app.use("/api/v1/cart", cartRoutes);

@@ -279,10 +279,51 @@ const superAdminDeleteAdmin = asyncHandler(async (req, res) => {
   });
 });
 
+// Get all Super Admins (except the default one if needed)
+const getAllSuperAdmins = asyncHandler(async (req, res) => {
+  if (!req.admin.isDefaultSuperAdmin) {
+    throw new apiError(403, "Only the default super admin can view this list!");
+  }
+
+  const superAdmins = await User.find({
+    role: "super-admin",
+  }).select("-password -refreshToken");
+
+  res
+    .status(200)
+    .json(
+      new apiResponse(
+        200,
+        superAdmins,
+        "List of all super admins fetched successfully.",
+        true
+      )
+    );
+});
+
+// Get all Admins
+const getAllAdmins = asyncHandler(async (req, res) => {
+  if (req.admin.role !== "super-admin") {
+    throw new apiError(403, "Only a super admin can access this route!");
+  }
+
+  const admins = await User.find({
+    role: "admin",
+  }).select("-password -refreshToken");
+
+  res
+    .status(200)
+    .json(
+      new apiResponse(200, admins, "List of admins fetched successfully.", true)
+    );
+});
+
 export {
   createDefaultSuperAdmin,
   registerSuperAdmin,
   deleteSuperAdmin,
   superAdminCreateAdmin,
   superAdminDeleteAdmin,
+  getAllSuperAdmins,
+  getAllAdmins,
 };
