@@ -30,6 +30,7 @@ import contentRoutes from "./routes/adminRoutes/content.routes.js";
 import categoryRoutes from "./routes/adminRoutes/category.routes.js";
 import activityRoutes from "./routes/adminRoutes/activity.routes.js";
 import superAdminRoutes from "./routes/adminRoutes/superAdmin.routes.js";
+import merchant from "./routes/vendorRoutes/merchant.routes.js";
 
 import userRouter from "./routes/userRoutes/user.routes.js";
 import cartRoutes from "./routes/orderRoutes/cart.routes.js";
@@ -64,6 +65,7 @@ app.use("/api/v1/activity", activityRoutes);
 app.use("/api/v1/brands", brandRoutes);
 app.use("/api/v1/super-admin", superAdminRoutes);
 app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/merchants", merchant);
 
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/users", userRouter);
