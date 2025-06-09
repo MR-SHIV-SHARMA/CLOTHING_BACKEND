@@ -276,7 +276,7 @@ const createBrand = asyncHandler(async (req, res) => {
   }
 
   // Upload brand logo to Cloudinary (if provided)
-  const logoLocalPath = req.files?.logo[0]?.path;
+  const logoLocalPath = req.files?.logo?.[0]?.path;
 
   if (!logoLocalPath) {
     throw new apiError(400, "Please select a valid image file for your logo.");
