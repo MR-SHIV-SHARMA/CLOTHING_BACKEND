@@ -47,7 +47,7 @@ router.patch(
   "/super-admin/update-merchant/:id",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["merchant"]),
+  checkRole(["super-admin", "merchant"]),
   logAction("Update Merchant"),
   updateMerchantById
 );

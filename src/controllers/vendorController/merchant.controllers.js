@@ -177,7 +177,7 @@ const getMerchantAccountById = asyncHandler(async (req, res) => {
 
   try {
     // Find merchant by ID
-    const merchant = await User.findById(id);
+    const merchant = await Merchant.findById(id);
 
     if (!merchant) {
       return res.status(404).json({
@@ -206,7 +206,7 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Fetch merchants with pagination and sorting
-    const merchants = await User.find({ role: "merchant" }) // Filter for merchants
+    const merchants = await Merchant.find() // Filter for merchants
       .sort({ [sort]: 1 }) // Sort by the specified field (ascending by default)
       .skip(skip)
       .limit(Number(limit));
@@ -218,7 +218,7 @@ const getAllMerchantAccounts = asyncHandler(async (req, res) => {
     }
 
     // Get the total count of merchants for pagination info
-    const totalMerchants = await User.countDocuments({ role: "merchant" }); // Count only merchants
+    const totalMerchants = await Merchant.countDocuments(); // Count only merchants
 
     return res.status(200).json({
       message: "Merchants retrieved successfully!",
