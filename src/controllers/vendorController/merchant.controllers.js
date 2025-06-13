@@ -147,7 +147,7 @@ const updateMerchantById = asyncHandler(async (req, res) => {
   }
 
   // Check if a merchant exists
-  const merchant = await Merchant.findById(id);
+  const merchant = await Merchant.findOne({ userId: id });
   if (!merchant) {
     return res.status(404).json({
       message: "Merchant not found. Please register the merchant first.",
