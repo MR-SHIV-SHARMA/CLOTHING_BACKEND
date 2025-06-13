@@ -16,33 +16,33 @@ const createMerchant = asyncHandler(async (req, res) => {
     throw new apiError(422, "Email and password are required!");
   }
 
-  // Check if a merchant with the email already exists
-  const existingMerchant = await User.findOne({ email, role: "merchant" });
-  if (existingMerchant) {
-    throw new apiError(422, "A merchant already exists with this email!");
+  // Check if user already exists
+  const existingUser = await User.findOne({ email, role: "merchant" });
+  if (existingUser) {
+    throw new apiError(422, "Merchant already exists with this email!");
   }
 
-  // Create a new user for the merchant
-  const newMerchant = new User({
+  // Create new user (local signup or Gmail)
+  const newUser = new User({
     email,
-    password,
+    password, // if Gmail, you can skip password logic
     role: "merchant",
   });
 
-  await newMerchant.save();
+  await newUser.save();
 
-  // Create a corresponding merchant record with placeholder data
-  const merchant = new Merchant({
-    _id: newMerchant._id,
-    email: newMerchant.email,
+  // ✅ Create linked Merchant entry
+  const newMerchant = new Merchant({
+    userId: newUser._id, // 👈 This links the two
+    email: newUser.email,
     name: "N/A",
     phone: Math.floor(Math.random() * 10000000000)
       .toString()
-      .padStart(10, "0"), // Random 10-digit phone
+      .padStart(10, "0"),
     panCard: `PAN${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
     aadhaarCard: Math.floor(Math.random() * 1000000000000)
       .toString()
-      .padStart(12, "0"), // Random 12-digit Aadhaar
+      .padStart(12, "0"),
     gstNumber: `GST${Math.random().toString(36).substr(2, 10).toUpperCase()}`,
     companyName: "N/A",
     ownerName: "N/A",
@@ -54,76 +54,79 @@ const createMerchant = asyncHandler(async (req, res) => {
     },
   });
 
-  try {
-    await merchant.save();
-  } catch (error) {
-    console.error("Error saving merchant:", error);
-    throw new apiError(500, "Failed to create merchant. Please try again.");
-  }
+  await newMerchant.save();
 
-  // Fetch the created merchant details
-  const createdMerchant = await User.findById(newMerchant._id).select(
-    "-password -refreshToken"
-  );
-
-  if (!createdMerchant) {
-    throw new apiError(
-      500,
-      "Failed to create merchant. Please try again later."
-    );
-  }
-
-  // Send email notification
+  // Optional: Send email
   await sendEmail({
-    email,
-    subject: "Verify Your Merchant Account",
-    message: `<p>Welcome Merchant, your merchant account has been created. Please verify your email.</p>`,
+    email: newUser.email,
+    subject: "Welcome to our platform!",
+    message: `<p>Thanks for signing up. Your merchant profile has been created.</p>`,
   });
 
-  // Log the action
+  // Log creation
   await ActivityLog.create({
-    adminId: newMerchant._id,
-    action: `Created a merchant with email: ${email}`,
+    adminId: newUser._id,
+    action: `Merchant account created for ${email}`,
   });
 
-  return res
-    .status(201)
-    .json(
-      new apiResponse(
-        201,
-        createdMerchant,
-        "Merchant created successfully",
-        true
-      )
-    );
+  // Final response
+  return res.status(201).json(
+    new apiResponse(
+      201,
+      {
+        user: {
+          id: newUser._id,
+          email: newUser.email,
+          role: newUser.role,
+        },
+        merchant: {
+          id: newMerchant._id,
+          userId: newMerchant.userId,
+        },
+      },
+      "Merchant account successfully created",
+      true
+    )
+  );
 });
 
 // Delete merchant by ID
 const deleteMerchantById = asyncHandler(async (req, res) => {
-  const merchant = await User.findByIdAndDelete(req.params.id);
-  if (!merchant) {
-    throw new apiError(404, "Merchant not found");
+  const { id } = req.params;
+
+  // Step 1: Delete from User model
+  const merchantUser = await User.findOneAndDelete({
+    _id: id,
+    role: "merchant",
+  });
+  if (!merchantUser) {
+    throw new apiError(404, "Merchant user not found");
   }
 
-  // Log activity
+  // Step 2: Delete from Merchant model
+  const merchantDetails = await Merchant.findOneAndDelete({ userId: id });
+
+  // Step 3: Log activity
   await ActivityLog.create({
     action: "Merchant Deleted",
-    adminId: merchant._id,
+    adminId: merchantUser._id,
   });
 
-  // Send email notification to the deleted merchant
+  // Step 4: Send email notification
   await sendEmail({
-    email: merchant.email,
+    email: merchantUser.email,
     subject: "Your Merchant Account Deleted",
-    message: `Your merchant account has been deleted successfully. \n\nEmail: ${merchant.email}`,
+    message: `Your merchant account has been deleted successfully.\n\nEmail: ${merchantUser.email}`,
   });
 
+  // Step 5: Return response
   return res.status(200).json(
     new apiResponse(200, {
       message: "Merchant deleted successfully!",
       deletedMerchant: {
-        id: merchant._id,
-        email: merchant.email,
+        id: merchantUser._id,
+        email: merchantUser.email,
+        merchantRecordDeleted: !!merchantDetails,
       },
     })
   );
@@ -177,7 +180,7 @@ const getMerchantAccountById = asyncHandler(async (req, res) => {
 
   try {
     // Find merchant by ID
-    const merchant = await Merchant.findById(id);
+    const merchant = await Merchant.findOne({ userId: id });
 
     if (!merchant) {
       return res.status(404).json({
