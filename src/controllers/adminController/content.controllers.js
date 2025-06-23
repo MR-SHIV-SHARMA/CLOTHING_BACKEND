@@ -187,7 +187,7 @@ const deleteProductById = asyncHandler(async (req, res) => {
   }
 
   // Perform soft delete
-  const deletedProduct = await Product.findByIdAndUpdate(
+  const deletedProduct = await Product.findByIdAndDelete(
     id,
     { isDeleted: true, isAvailable: false },
     { new: true }
