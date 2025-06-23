@@ -9,15 +9,7 @@ import { trackAnalytics } from "../../middlewares/analytics.middleware.js";
 const router = Router();
 
 // Get all products with optional filters
-router.get(
-  "/",
-  trackAnalytics,
-  (req, res) => {
-    res.send("Welcome to the Products!");
-  },
-  adminRateLimiter,
-  getAllProducts
-);
+router.get("/", trackAnalytics, adminRateLimiter, getAllProducts);
 
 // Get a specific product by ID
 router.get("/:id", adminRateLimiter, getProductById);

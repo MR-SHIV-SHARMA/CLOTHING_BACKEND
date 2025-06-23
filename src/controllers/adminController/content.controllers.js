@@ -55,27 +55,14 @@ const createProduct = asyncHandler(async (req, res) => {
     productData.merchant = user._id;
 
     // Validate sizes
-    if (
-      productData.sizes &&
-      (!Array.isArray(productData.sizes) ||
-        productData.sizes.some((size) => !size.size || size.stock < 0))
-    ) {
-      throw new apiError(
-        400,
-        "Sizes must be an array of objects with 'size' and valid 'stock'."
-      );
+    if (typeof productData.sizes === "string") {
+      productData.sizes = JSON.parse(productData.sizes);
     }
 
     // Validate colors
-    if (
-      productData.colors &&
-      (!Array.isArray(productData.colors) ||
-        productData.colors.some((color) => !color.color || color.stock < 0))
-    ) {
-      throw new apiError(
-        400,
-        "Colors must be an array of objects with 'color' and valid 'stock'."
-      );
+
+    if (typeof productData.colors === "string") {
+      productData.colors = JSON.parse(productData.colors);
     }
 
     // Validate discount

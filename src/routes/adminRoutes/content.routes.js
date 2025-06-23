@@ -61,7 +61,7 @@ router.get(
   "/getAllProductsbyMerchant",
   adminRateLimiter,
   authenticateAdmin,
-  checkRole(["admin", "super-admin", "merchant", "customer"]),
+  checkRole(["admin", "super-admin", "merchant"]),
   getAllProductsbyMerchant
 );
 
