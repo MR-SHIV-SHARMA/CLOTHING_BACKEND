@@ -56,12 +56,12 @@ const createMerchant = asyncHandler(async (req, res) => {
 
   await newMerchant.save();
 
-  // Optional: Send email
-  await sendEmail({
-    email: newUser.email,
-    subject: "Welcome to our platform!",
-    message: `<p>Thanks for signing up. Your merchant profile has been created.</p>`,
-  });
+  // // Optional: Send email
+  // await sendEmail({
+  //   email: newUser.email,
+  //   subject: "Welcome to our platform!",
+  //   message: `<p>Thanks for signing up. Your merchant profile has been created.</p>`,
+  // });
 
   // Log creation
   await ActivityLog.create({
@@ -112,12 +112,12 @@ const deleteMerchantById = asyncHandler(async (req, res) => {
     adminId: merchantUser._id,
   });
 
-  // Step 4: Send email notification
-  await sendEmail({
-    email: merchantUser.email,
-    subject: "Your Merchant Account Deleted",
-    message: `Your merchant account has been deleted successfully.\n\nEmail: ${merchantUser.email}`,
-  });
+  // // Step 4: Send email notification
+  // await sendEmail({
+  //   email: merchantUser.email,
+  //   subject: "Your Merchant Account Deleted",
+  //   message: `Your merchant account has been deleted successfully.\n\nEmail: ${merchantUser.email}`,
+  // });
 
   // Step 5: Return response
   return res.status(200).json(

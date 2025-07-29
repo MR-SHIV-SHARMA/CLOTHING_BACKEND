@@ -11,6 +11,15 @@ import {
   createShipping,
   getOrderStatus,
   getUserOrders,
+  // Stripe methods
+  createStripePaymentIntent,
+  createStripeCustomer,
+  confirmStripePayment,
+  createStripeRefund,
+  getStripePaymentDetails,
+  handleStripeWebhook,
+  createSetupIntent,
+  getCustomerPaymentMethods,
 } from "../../controllers/paymentController/payment.controllers.js";
 import authenticateAdmin from "../../middlewares/authMiddleware.js";
 import { checkRole } from "../../middlewares/roleMiddleware.js";
@@ -143,6 +152,85 @@ router.get(
   checkRole(["admin", "superadmin", "merchant", "customer"]),
   logAction("Get All Orders by User"),
   getUserOrders
+);
+
+// ==================== STRIPE PAYMENT ROUTES ====================
+
+// Create Stripe payment intent
+router.post(
+  "/stripe/payment-intent",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["customer"]),
+  logAction("Create Stripe Payment Intent"),
+  createStripePaymentIntent
+);
+
+// Create Stripe customer
+router.post(
+  "/stripe/customer",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["customer", "admin", "superadmin"]),
+  logAction("Create Stripe Customer"),
+  createStripeCustomer
+);
+
+// Confirm Stripe payment
+router.post(
+  "/stripe/confirm-payment",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["customer"]),
+  logAction("Confirm Stripe Payment"),
+  confirmStripePayment
+);
+
+// Create Stripe refund
+router.post(
+  "/stripe/refund",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["admin", "superadmin", "merchant"]),
+  logAction("Create Stripe Refund"),
+  createStripeRefund
+);
+
+// Get Stripe payment details
+router.get(
+  "/stripe/payment/:paymentIntentId",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
+  logAction("Get Stripe Payment Details"),
+  getStripePaymentDetails
+);
+
+// Stripe webhook (no authentication needed for webhooks)
+router.post(
+  "/stripe/webhook",
+  express.raw({ type: 'application/json' }), // Raw body parser for webhook
+  handleStripeWebhook
+);
+
+// Create setup intent for saving payment methods
+router.post(
+  "/stripe/setup-intent",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["customer"]),
+  logAction("Create Stripe Setup Intent"),
+  createSetupIntent
+);
+
+// Get customer payment methods
+router.get(
+  "/stripe/customer/:customerId/payment-methods",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["customer", "admin", "superadmin"]),
+  logAction("Get Customer Payment Methods"),
+  getCustomerPaymentMethods
 );
 
 export default router;

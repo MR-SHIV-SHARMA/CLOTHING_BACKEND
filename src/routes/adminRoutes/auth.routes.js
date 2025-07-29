@@ -25,7 +25,7 @@ router.use(
 );
 
 // Login an admin or super admin
-router.post("/login", adminRateLimiter, login);
+router.post("/login",  login);
 
 // Logout an admin
 router.post(

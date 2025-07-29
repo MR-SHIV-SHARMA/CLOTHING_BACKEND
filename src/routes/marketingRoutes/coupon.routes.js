@@ -5,6 +5,8 @@ import {
   getCouponById,
   updateCouponById,
   deleteCouponById,
+  validateCoupon,
+  applyCoupon,
 } from "../../controllers/marketingController/coupon.controllers.js";
 import authenticateAdmin from "../../middlewares/authMiddleware.js";
 import { checkRole } from "../../middlewares/roleMiddleware.js";
@@ -54,6 +56,24 @@ router.delete(
   checkRole(["admin", "superadmin", "merchant"]),
   logAction("Delete A Coupon By Id"),
   deleteCouponById
+);
+
+// Validate a coupon code
+router.post(
+  "/validate",
+  adminRateLimiter,
+  logAction("Validate Coupon"),
+  validateCoupon
+);
+
+// Apply a coupon to an order
+router.post(
+  "/apply",
+  authenticateAdmin,
+  adminRateLimiter,
+  checkRole(["admin", "superadmin", "merchant", "customer"]),
+  logAction("Apply Coupon"),
+  applyCoupon
 );
 
 export default router;

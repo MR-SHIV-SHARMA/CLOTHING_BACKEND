@@ -9,6 +9,7 @@ import { Order } from "../../Models/orderModels/order.models.js";
 import { Product } from "../../Models/adminModels/product.models.js";
 import { Shipping } from "../../Models/orderModels/shipping.models.js";
 import { Payment } from "../../Models/paymentModels/payment.models.js";
+import { StripeService } from "../../services/stripeService.js";
 
 // Create a new payment
 const createPayment = asyncHandler(async (req, res) => {
@@ -343,6 +344,385 @@ const getUserOrders = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, orders });
 });
 
+// ==================== STRIPE PAYMENT METHODS ====================
+
+/**
+ * Create Stripe payment intent
+ */
+const createStripePaymentIntent = asyncHandler(async (req, res) => {
+  const { orderId, currency = 'usd', customerId } = req.body;
+
+  if (!orderId) {
+    throw new apiError(400, 'Order ID is required');
+  }
+
+  try {
+    // Fetch order details
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new apiError(404, 'Order not found');
+    }
+
+    // Create payment intent using StripeService
+    const paymentIntentData = await StripeService.createPaymentIntent({
+      amount: order.grandTotal,
+      currency,
+      customerId,
+      metadata: {
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber || 'N/A'
+      },
+      description: `Payment for order ${order.orderNumber || order._id}`
+    });
+
+    // Save payment record in database
+    const payment = new Payment({
+      order: orderId,
+      paymentMethod: 'stripe',
+      paymentStatus: 'pending',
+      amount: order.grandTotal,
+      transactionId: paymentIntentData.paymentIntentId,
+      stripePaymentIntentId: paymentIntentData.paymentIntentId,
+      currency: currency.toUpperCase()
+    });
+
+    await payment.save();
+
+    return res.status(200).json(
+      new apiResponse(200, {
+        clientSecret: paymentIntentData.clientSecret,
+        paymentIntentId: paymentIntentData.paymentIntentId,
+        amount: paymentIntentData.amount,
+        currency: paymentIntentData.currency,
+        paymentId: payment._id
+      }, 'Stripe payment intent created successfully')
+    );
+  } catch (error) {
+    console.error('Stripe payment intent creation error:', error);
+    throw new apiError(500, error.message || 'Failed to create Stripe payment intent');
+  }
+});
+
+/**
+ * Create Stripe customer
+ */
+const createStripeCustomer = asyncHandler(async (req, res) => {
+  const { email, name, phone, address } = req.body;
+
+  if (!email || !name) {
+    throw new apiError(400, 'Email and name are required');
+  }
+
+  try {
+    const customerData = await StripeService.createCustomer({
+      email,
+      name,
+      phone,
+      address
+    });
+
+    return res.status(201).json(
+      new apiResponse(201, customerData, 'Stripe customer created successfully')
+    );
+  } catch (error) {
+    console.error('Stripe customer creation error:', error);
+    throw new apiError(500, error.message || 'Failed to create Stripe customer');
+  }
+});
+
+/**
+ * Confirm Stripe payment
+ */
+const confirmStripePayment = asyncHandler(async (req, res) => {
+  const { paymentIntentId, paymentMethodId } = req.body;
+
+  if (!paymentIntentId || !paymentMethodId) {
+    throw new apiError(400, 'Payment intent ID and payment method ID are required');
+  }
+
+  try {
+    // Confirm payment using StripeService
+    const confirmationResult = await StripeService.confirmPaymentIntent(paymentIntentId, paymentMethodId);
+
+    // Update payment record in database
+    const payment = await Payment.findOneAndUpdate(
+      { stripePaymentIntentId: paymentIntentId },
+      { 
+        paymentStatus: confirmationResult.status === 'succeeded' ? 'success' : 'failed',
+        paymentMethodId: paymentMethodId,
+        confirmedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (payment && confirmationResult.status === 'succeeded') {
+      // Update order status
+      const order = await Order.findById(payment.order);
+      if (order) {
+        order.status = 'Success';
+        order.paymentStatus = 'paid';
+        await order.save();
+
+        // Update product stock after successful payment
+        await updateProductStock(order.items);
+      }
+    }
+
+    return res.status(200).json(
+      new apiResponse(200, {
+        paymentIntent: confirmationResult,
+        payment,
+        status: confirmationResult.status
+      }, 'Payment confirmation processed successfully')
+    );
+  } catch (error) {
+    console.error('Stripe payment confirmation error:', error);
+    throw new apiError(500, error.message || 'Failed to confirm Stripe payment');
+  }
+});
+
+/**
+ * Create Stripe refund
+ */
+const createStripeRefund = asyncHandler(async (req, res) => {
+  const { paymentIntentId, amount, reason = 'requested_by_customer' } = req.body;
+
+  if (!paymentIntentId) {
+    throw new apiError(400, 'Payment intent ID is required');
+  }
+
+  try {
+    // Find the payment record
+    const payment = await Payment.findOne({ stripePaymentIntentId: paymentIntentId });
+    if (!payment) {
+      throw new apiError(404, 'Payment not found');
+    }
+
+    // Create refund using StripeService
+    const refundData = await StripeService.createRefund(paymentIntentId, amount, reason);
+
+    // Update payment record
+    payment.refundStatus = refundData.status;
+    payment.refundId = refundData.refundId;
+    payment.refundAmount = refundData.amount;
+    payment.refundReason = refundData.reason;
+    payment.refundedAt = new Date();
+    await payment.save();
+
+    // Update order status if fully refunded
+    if (!amount || amount >= payment.amount) {
+      const order = await Order.findById(payment.order);
+      if (order) {
+        order.status = 'Refunded';
+        order.paymentStatus = 'refunded';
+        await order.save();
+      }
+    }
+
+    return res.status(200).json(
+      new apiResponse(200, {
+        refund: refundData,
+        payment
+      }, 'Refund created successfully')
+    );
+  } catch (error) {
+    console.error('Stripe refund creation error:', error);
+    throw new apiError(500, error.message || 'Failed to create refund');
+  }
+});
+
+/**
+ * Get Stripe payment details
+ */
+const getStripePaymentDetails = asyncHandler(async (req, res) => {
+  const { paymentIntentId } = req.params;
+
+  if (!paymentIntentId) {
+    throw new apiError(400, 'Payment intent ID is required');
+  }
+
+  try {
+    // Get payment details from Stripe
+    const stripePaymentDetails = await StripeService.retrievePaymentIntent(paymentIntentId);
+
+    // Get local payment record
+    const localPayment = await Payment.findOne({ stripePaymentIntentId: paymentIntentId })
+      .populate('order');
+
+    return res.status(200).json(
+      new apiResponse(200, {
+        stripeDetails: stripePaymentDetails,
+        localPayment
+      }, 'Payment details retrieved successfully')
+    );
+  } catch (error) {
+    console.error('Get Stripe payment details error:', error);
+    throw new apiError(500, error.message || 'Failed to retrieve payment details');
+  }
+});
+
+/**
+ * Handle Stripe webhook events
+ */
+const handleStripeWebhook = asyncHandler(async (req, res) => {
+  const signature = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!signature) {
+    throw new apiError(400, 'Missing Stripe signature');
+  }
+
+  if (!endpointSecret) {
+    throw new apiError(500, 'Stripe webhook secret not configured');
+  }
+
+  try {
+    const event = await StripeService.handleWebhook(req.body, signature, endpointSecret);
+
+    // Handle specific events
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await handlePaymentSucceeded(event.data.object);
+        break;
+      case 'payment_intent.payment_failed':
+        await handlePaymentFailed(event.data.object);
+        break;
+      case 'refund.created':
+        await handleRefundCreated(event.data.object);
+        break;
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    return res.status(200).json(
+      new apiResponse(200, { received: true }, 'Webhook processed successfully')
+    );
+  } catch (error) {
+    console.error('Stripe webhook error:', error);
+    throw new apiError(400, error.message || 'Webhook signature verification failed');
+  }
+});
+
+// Helper function to handle successful payments
+const handlePaymentSucceeded = async (paymentIntent) => {
+  try {
+    const payment = await Payment.findOneAndUpdate(
+      { stripePaymentIntentId: paymentIntent.id },
+      { 
+        paymentStatus: 'success',
+        confirmedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (payment) {
+      const order = await Order.findById(payment.order);
+      if (order) {
+        order.status = 'Success';
+        order.paymentStatus = 'paid';
+        await order.save();
+        await updateProductStock(order.items);
+      }
+    }
+  } catch (error) {
+    console.error('Error handling payment succeeded:', error);
+  }
+};
+
+// Helper function to handle failed payments
+const handlePaymentFailed = async (paymentIntent) => {
+  try {
+    const payment = await Payment.findOneAndUpdate(
+      { stripePaymentIntentId: paymentIntent.id },
+      { paymentStatus: 'failed' },
+      { new: true }
+    );
+
+    if (payment) {
+      const order = await Order.findById(payment.order);
+      if (order) {
+        order.status = 'Failed';
+        order.paymentStatus = 'failed';
+        await order.save();
+      }
+    }
+  } catch (error) {
+    console.error('Error handling payment failed:', error);
+  }
+};
+
+// Helper function to handle refund created
+const handleRefundCreated = async (refund) => {
+  try {
+    const payment = await Payment.findOneAndUpdate(
+      { stripePaymentIntentId: refund.payment_intent },
+      { 
+        refundStatus: refund.status,
+        refundId: refund.id,
+        refundAmount: refund.amount / 100, // Convert from cents
+        refundReason: refund.reason,
+        refundedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (payment) {
+      const order = await Order.findById(payment.order);
+      if (order && refund.amount >= (payment.amount * 100)) { // Full refund
+        order.status = 'Refunded';
+        order.paymentStatus = 'refunded';
+        await order.save();
+      }
+    }
+  } catch (error) {
+    console.error('Error handling refund created:', error);
+  }
+};
+
+/**
+ * Create setup intent for saving payment methods
+ */
+const createSetupIntent = asyncHandler(async (req, res) => {
+  const { customerId } = req.body;
+
+  if (!customerId) {
+    throw new apiError(400, 'Customer ID is required');
+  }
+
+  try {
+    const setupIntentData = await StripeService.createSetupIntent(customerId);
+
+    return res.status(200).json(
+      new apiResponse(200, setupIntentData, 'Setup intent created successfully')
+    );
+  } catch (error) {
+    console.error('Setup intent creation error:', error);
+    throw new apiError(500, error.message || 'Failed to create setup intent');
+  }
+});
+
+/**
+ * Get customer payment methods
+ */
+const getCustomerPaymentMethods = asyncHandler(async (req, res) => {
+  const { customerId } = req.params;
+
+  if (!customerId) {
+    throw new apiError(400, 'Customer ID is required');
+  }
+
+  try {
+    const paymentMethods = await StripeService.getCustomerPaymentMethods(customerId);
+
+    return res.status(200).json(
+      new apiResponse(200, paymentMethods, 'Payment methods retrieved successfully')
+    );
+  } catch (error) {
+    console.error('Get payment methods error:', error);
+    throw new apiError(500, error.message || 'Failed to retrieve payment methods');
+  }
+});
+
 // Handling Cancellations/Returns
 // Order Cancellations: Implement logic for users to cancel an order before it's processed or shipped.
 
@@ -358,4 +738,13 @@ export {
   createShipping,
   getOrderStatus,
   getUserOrders,
+  // Stripe methods
+  createStripePaymentIntent,
+  createStripeCustomer,
+  confirmStripePayment,
+  createStripeRefund,
+  getStripePaymentDetails,
+  handleStripeWebhook,
+  createSetupIntent,
+  getCustomerPaymentMethods,
 };

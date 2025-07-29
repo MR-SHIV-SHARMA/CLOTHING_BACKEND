@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { apiError } from "../../utils/apiError.js";
-import { sendEmail } from "../../helpers/mailer.js";
+// import { sendEmail } from "../../helpers/mailer.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { User } from "../../Models/userModels/user.models.js";
@@ -75,11 +75,11 @@ const login = asyncHandler(async (req, res) => {
 
   // Send login email notification
   const message = `Dear ${admin.email},\n\nYou have successfully logged in. If this was not you, please contact support immediately.`;
-  await sendEmail({
-    email: admin.email,
-    subject: "Login Notification",
-    message,
-  });
+  // await sendEmail({
+  //   email: admin.email,
+  //   subject: "Login Notification",
+  //   message,
+  // });
 
   return res
     .status(200)
@@ -122,11 +122,11 @@ const logout = asyncHandler(async (req, res) => {
 
   // Send logout email notification
   const message = `Dear ${req.admin.email},\n\nYou have successfully logged out. If this was not you, please contact support immediately.`;
-  await sendEmail({
-    email: req.admin.email,
-    subject: "Logout Notification",
-    message,
-  });
+  // await sendEmail({
+  //   email: req.admin.email,
+  //   subject: "Logout Notification",
+  //   message,
+  // });
 
   return res
     .status(200)
@@ -231,11 +231,11 @@ const requestPasswordReset = asyncHandler(async (req, res) => {
   const resetUrl = `${req.protocol}://${req.get("host")}/auth/reset-password/${resetToken}`;
   const message = `Dear ${admin.name || admin.email},\n\nYou have requested a password reset. Please click the link below to reset your password:\n${resetUrl}\n\nIf you did not request this, please ignore this email.`;
 
-  await sendEmail({
-    email: admin.email,
-    subject: "Password Reset Request",
-    message,
-  });
+  // await sendEmail({
+  //   email: admin.email,
+  //   subject: "Password Reset Request",
+  //   message,
+  // });
 
   await ActivityLog.create({
     adminId: admin._id,
@@ -273,11 +273,11 @@ const resetPasswordWithToken = asyncHandler(async (req, res) => {
 
   const message = `Dear ${admin.name || admin.email},\n\nYour password has been successfully reset. If this was not you, please contact support immediately.`;
 
-  await sendEmail({
-    email: admin.email,
-    subject: "Password Reset Confirmation",
-    message,
-  });
+  // await sendEmail({
+  //   email: admin.email,
+  //   subject: "Password Reset Confirmation",
+  //   message,
+  // });
 
   res.status(200).json({ message: "Password reset successfully" });
 });
@@ -307,11 +307,11 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   // Send password reset confirmation email
   const message = `Dear ${admin.email},\n\nYour password has been successfully changed. If this was not you, please contact support immediately.`;
-  await sendEmail({
-    email: admin.email,
-    subject: "Password Changed",
-    message,
-  });
+  // await sendEmail({
+  //   email: admin.email,
+  //   subject: "Password Changed",
+  //   message,
+  // });
 
   res.status(200).json({ message: "Password reset successfully" });
 });

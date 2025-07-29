@@ -56,6 +56,14 @@ import bulkOrderRoutes from "./routes/orderRoutes/bulkOrder.routes.js";
 import transactionRoutes from "./routes/paymentRoutes/transaction.routes.js";
 import seoMetadataRoutes from "./routes/marketingRoutes/seoMetadata.routes.js";
 import advertisementRoutes from "./routes/marketingRoutes/advertisement.routes.js";
+import dashboardRoutes from "./routes/analyticsRoutes/dashboard.routes.js";
+import multiMerchantOrderRoutes from "./routes/orderRoutes/multiMerchantOrder.routes.js";
+import vendorRoutes from "./routes/vendorRoutes/vendor.routes.js";
+import salesRoutes from "./routes/analyticsRoutes/sales.routes.js";
+import seoRoutes from "./routes/marketingRoutes/seo.routes.js";
+import oauthRoutes from "./routes/userRoutes/oauth.routes.js";
+import emailMarketingRoutes from "./routes/marketingRoutes/emailMarketing.routes.js";
+import promotionRoutes from "./routes/marketingRoutes/promotion.routes.js";
 
 // admin block
 app.use("/api/v1/auth", authRoutes);
@@ -69,7 +77,6 @@ app.use("/api/v1/merchants", merchant);
 
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/banners", bannerRoutes);
@@ -92,5 +99,13 @@ app.use("/api/v1/bulk-orders", bulkOrderRoutes);
 app.use("/api/v1/seo-metadata", seoMetadataRoutes);
 app.use("/api/v1/advertisements", advertisementRoutes);
 app.use("/api/v1/transactionRoutes", transactionRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1/multi-merchant-orders", multiMerchantOrderRoutes);
+app.use("/api/v1/vendors", vendorRoutes);
+app.use("/api/v1/sales", salesRoutes);
+app.use("/api/v1/seo", seoRoutes);
+app.use("/api/v1/oauth", oauthRoutes);
+app.use("/api/v1/email-marketing", emailMarketingRoutes);
+app.use("/api/v1/promotions", promotionRoutes);
 
 export { app };

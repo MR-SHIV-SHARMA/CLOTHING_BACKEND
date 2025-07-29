@@ -27,14 +27,14 @@ router.use(
 // Create Default Super Admin
 router.post(
   "/super-admin/create-Default/SuperAdmin",
-  adminRateLimiter,
+  // adminRateLimiter,
   createDefaultSuperAdmin
 );
 
 // Register a super admin
 router.post(
   "/super-admin/register",
-  adminRateLimiter,
+  // adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin"]),
   registerSuperAdmin
@@ -43,7 +43,7 @@ router.post(
 // Only the default super admin can delete other super admins
 router.delete(
   "/super-admin/delete/:id",
-  adminRateLimiter,
+  // adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin"]),
   deleteSuperAdmin
@@ -52,7 +52,7 @@ router.delete(
 // Super admin creates a new admin
 router.post(
   "/super-admin/create-admin",
-  adminRateLimiter,
+  // adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin"]),
   superAdminCreateAdmin
@@ -61,7 +61,7 @@ router.post(
 // Super admin deletes an admin by ID
 router.delete(
   "/super-admin/delete-admin/:id",
-  adminRateLimiter,
+  // adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin"]),
   superAdminDeleteAdmin
@@ -70,7 +70,7 @@ router.delete(
 // Get all super admins
 router.get(
   "/super-admin",
-  adminRateLimiter,
+  // adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin"]),
   getAllSuperAdmins
@@ -79,7 +79,7 @@ router.get(
 // Get all admins
 router.get(
   "/admins",
-  adminRateLimiter,
+  // adminRateLimiter,
   authenticateAdmin,
   checkRole(["super-admin"]),
   getAllAdmins
